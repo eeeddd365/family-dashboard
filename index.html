@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>West District Dashboard</title>
+    <title>Xitun Smart Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
@@ -15,109 +15,112 @@
             cursor: none;
         }
         .glass {
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(30px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 2rem;
         }
-        .text-neon { text-shadow: 0 0 15px rgba(56, 189, 248, 0.5); }
+        .text-neon { text-shadow: 0 0 20px rgba(56, 189, 248, 0.4); }
     </style>
 </head>
-<body class="h-screen w-screen p-8 grid grid-cols-12 grid-rows-6 gap-6">
+<body class="h-screen w-screen p-6 grid grid-cols-12 grid-rows-6 gap-6">
 
-    <div class="col-span-4 row-span-4 flex flex-col gap-6">
-        <div class="glass rounded-[2.5rem] p-10 flex-1 flex flex-col justify-center items-center">
-            <div id="clock" class="text-9xl font-light text-white text-neon">00:00</div>
-            <div id="date" class="text-3xl text-slate-200 mt-6">2026年2月1日</div>
-            <div id="lunar" class="text-2xl text-amber-200/80 mt-2 font-light">載入中...</div>
-            <div id="day" class="text-xl text-slate-500 mt-4 tracking-widest uppercase">Sunday</div>
+    <div class="col-span-5 row-span-4 glass p-10 flex flex-col justify-center items-center text-center">
+        <div id="clock" class="text-[10rem] font-light leading-none text-white text-neon">00:00</div>
+        <div class="mt-8">
+            <span id="date" class="text-4xl text-slate-200 font-medium">2026年2月1日</span>
+            <span id="day" class="block text-xl text-slate-500 mt-2 tracking-[0.5em] uppercase">Sunday</span>
         </div>
+        <div id="lunar" class="mt-4 text-2xl text-amber-200/70 italic font-light">農曆 載入中...</div>
+    </div>
 
-        <div class="glass rounded-[2.5rem] p-8 flex flex-col justify-center">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sky-400 text-lg mb-1">西屯區, 青海路</p>
-                    <h2 id="temp" class="text-7xl font-bold text-white tracking-tighter">--°C</h2>
-                </div>
-                <div id="weather-icon" class="text-7xl">☀️</div>
+    <div class="col-span-7 row-span-2 glass p-8 flex items-center justify-around">
+        <div class="text-center">
+            <p class="text-sky-400 text-sm mb-1">西屯區 青海路</p>
+            <div id="temp" class="text-7xl font-bold text-white tracking-tighter">--°C</div>
+            <div id="weather-desc" class="text-slate-400 mt-1">同步中...</div>
+        </div>
+        <div id="weather-icon" class="text-8xl">☀️</div>
+        <div class="space-y-2 border-l border-white/10 pl-8">
+            <div>
+                <p class="text-[10px] text-slate-500 uppercase tracking-widest">降雨機率</p>
+                <p id="pop" class="text-2xl text-sky-400 font-bold">--%</p>
             </div>
-            <div class="mt-6 grid grid-cols-2 gap-4 border-t border-white/10 pt-6">
-                <div>
-                    <p class="text-xs text-slate-500 uppercase">今日高/低溫</p>
-                    <p id="temp-range" class="text-xl text-slate-200">-- / --</p>
-                </div>
-                <div>
-                    <p class="text-xs text-slate-500 uppercase">降雨機率</p>
-                    <p id="pop" class="text-xl text-sky-400 font-bold">--%</p>
-                </div>
+            <div>
+                <p class="text-[10px] text-slate-500 uppercase tracking-widest">今日高低溫</p>
+                <p id="temp-range" class="text-xl text-slate-200">-- / --</p>
             </div>
         </div>
     </div>
 
-    <div class="col-span-8 row-span-3 glass rounded-[2.5rem] p-10 overflow-hidden">
-        <h2 class="text-2xl font-bold text-white mb-6 flex items-center gap-2">
-            <span class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span> 即時焦點新聞
-        </h2>
-        <div id="news-list" class="space-y-6">
-            <p class="text-slate-600">連線中...</p>
+    <div class="col-span-7 row-span-3 glass p-8 overflow-hidden">
+        <div class="flex items-center gap-3 mb-4">
+            <div class="w-1.5 h-6 bg-red-600 rounded-full"></div>
+            <h2 class="text-xl font-bold text-white tracking-widest">即時焦點新聞</h2>
+        </div>
+        <div id="news-list" class="space-y-5">
+            <p class="text-slate-600">載入最新新聞...</p>
         </div>
     </div>
 
-    <div class="col-span-8 row-span-3 glass rounded-[2.5rem] p-8 overflow-hidden">
-        <div class="flex justify-between items-center mb-4">
-            <h2 class="text-xl font-bold text-white">📷 青海路周邊即時影像</h2>
-            <a href="https://tcnvr6.taichung.gov.tw/9db0d761" target="_blank" class="text-xs text-sky-500 underline">無法顯示？點此開啟原始源</a>
+    <div class="col-span-5 row-span-2 glass p-8">
+        <h2 class="text-lg font-bold text-slate-400 mb-4 tracking-widest uppercase">Family Bulletin</h2>
+        <div class="flex gap-6">
+            <div class="flex-1 bg-white/5 p-4 rounded-xl border-l-4 border-amber-500">
+                <p class="text-xs text-slate-500 mb-1">提示</p>
+                <p class="text-xl text-slate-200">出門記得帶傘</p>
+            </div>
+            <div class="flex-1 bg-white/5 p-4 rounded-xl border-l-4 border-blue-500">
+                <p class="text-xs text-slate-500 mb-1">晚上</p>
+                <p class="text-xl text-slate-200">垃圾車 19:30</p>
+            </div>
         </div>
-        <div class="w-full h-full bg-black rounded-2xl relative">
+    </div>
+
+    <div class="col-span-3 row-span-2 glass p-4 flex flex-col">
+        <p class="text-xs text-slate-500 mb-2 flex justify-between">
+            <span>青海路影像</span>
+            <span class="text-red-500 animate-pulse">● LIVE</span>
+        </p>
+        <div class="flex-1 bg-black rounded-xl overflow-hidden relative">
             <iframe 
-                id="traffic-camera"
                 src="https://tcnvr6.taichung.gov.tw/9db0d761" 
-                width="100%" height="90%" 
-                style="border:0; border-radius: 1rem;"
+                width="100%" height="100%" 
+                style="border:0;"
                 sandbox="allow-forms allow-scripts allow-same-origin">
             </iframe>
         </div>
     </div>
 
-    <div class="col-span-4 row-span-3 glass rounded-[2.5rem] p-8">
-        <h2 class="text-xl font-bold text-white mb-4">📅 家庭公告</h2>
-        <div class="space-y-4">
-            <div class="border-l-2 border-sky-500 pl-4 py-1">
-                <p class="text-white text-lg font-light">記得帶傘</p>
-            </div>
-        </div>
+    <div class="col-span-4 row-span-1 glass p-4 flex items-center justify-center">
+        <p class="text-slate-500 text-sm font-light">Smart Home Dashboard v2.0</p>
     </div>
 
     <script>
         const API_KEY = '71530563aac2b604c442ba03e2bf1bd4';
-        const LAT = '24.1627'; // 西屯區大約緯度
-        const LON = '120.6401'; // 西屯區大約經度
+        const LAT = '24.1627'; 
+        const LON = '120.6401';
 
         function updateTime() {
             const now = new Date();
             document.getElementById('clock').innerText = now.toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit', hour12: false });
             document.getElementById('date').innerText = now.toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric' });
-            
             const lunarFormatter = new Intl.DateTimeFormat('zh-u-ca-chinese', {day:'numeric', month:'long'});
             document.getElementById('lunar').innerText = `農曆 ${lunarFormatter.format(now).replace(/年/, '')}`;
-            
             const weekdays = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
             document.getElementById('day').innerText = weekdays[now.getDay()];
         }
 
         async function fetchWeather() {
             try {
-                // 使用座標獲取精確到西屯區的天氣
                 const res = await fetch(`https://api.openweathermap.org/data/2.5/forecast?lat=${LAT}&lon=${LON}&units=metric&appid=${API_KEY}&lang=zh_tw`);
                 const data = await res.json();
-                
                 const current = data.list[0];
                 document.getElementById('temp').innerText = `${Math.round(current.main.temp)}°C`;
                 document.getElementById('pop').innerText = `${Math.round(current.pop * 100)}%`;
-                
-                // 找出今日最高最低溫
+                document.getElementById('weather-desc').innerText = current.weather[0].description;
                 const temps = data.list.slice(0, 8).map(i => i.main.temp);
                 document.getElementById('temp-range').innerText = `${Math.round(Math.min(...temps))}° / ${Math.round(Math.max(...temps))}°`;
-                
                 const icons = { "Clear": "☀️", "Clouds": "☁️", "Rain": "🌧️", "Drizzle": "🌦️", "Thunderstorm": "⛈️" };
                 document.getElementById('weather-icon').innerText = icons[current.weather[0].main] || "☀️";
             } catch (e) { console.error(e); }
@@ -127,9 +130,9 @@
             try {
                 const res = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=https://news.pts.org.tw/xml/newsfeed.xml`);
                 const data = await res.json();
-                document.getElementById('news-list').innerHTML = data.items.slice(0, 3).map(item => `
-                    <div class="pb-4 border-b border-white/5">
-                        <div class="text-2xl text-slate-200 font-light line-clamp-1">${item.title}</div>
+                document.getElementById('news-list').innerHTML = data.items.slice(0, 4).map(item => `
+                    <div class="border-b border-white/5 pb-2">
+                        <div class="text-xl text-slate-200 font-light line-clamp-1">${item.title}</div>
                     </div>
                 `).join('');
             } catch (e) { console.error(e); }
