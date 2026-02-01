@@ -3,42 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Surface Go Home Dashboard - Weather & Horoscope Edition</title>
+    <title>Surface Go Home Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@100;300;400;700&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body, html { 
-            width: 100%; height: 100%; 
-            overflow: hidden !important; 
-            background: #020617; 
-            color: #f1f5f9;
-            font-family: 'Noto Sans TC', sans-serif;
-        }
-        .dashboard-container {
-            height: 100vh; width: 100vw;
-            padding: 1.5rem;
-            display: grid;
-            grid-template-columns: 1fr 1fr; 
-            grid-template-rows: 1.5fr 1fr; 
-            gap: 1.5rem;
-        }
-        .glass {
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 2rem;
-            display: flex; flex-direction: column;
-            justify-content: center;
-        }
+        body, html { width: 100%; height: 100%; overflow: hidden !important; background: #020617; color: #f1f5f9; font-family: 'Noto Sans TC', sans-serif; }
+        .dashboard-container { height: 100vh; width: 100vw; padding: 1.5rem; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1.5fr 1fr; gap: 1.5rem; }
+        .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 2rem; display: flex; flex-direction: column; justify-content: center; }
         .text-neon { text-shadow: 0 0 20px rgba(56, 189, 248, 0.4); }
-        .camera-container { 
-            aspect-ratio: 16 / 9; width: 100%; 
-            background: #000; border-radius: 1.2rem; 
-            overflow: hidden; 
-        }
+        .camera-container { aspect-ratio: 16 / 9; width: 100%; background: #000; border-radius: 1.2rem; overflow: hidden; }
         iframe { width: 100%; height: 100%; border: none; transition: opacity 0.5s ease; object-fit: contain; }
-        .aqi-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; margin-right: 4px; }
         #horo-text { transition: opacity 0.5s ease; }
     </style>
 </head>
@@ -51,12 +26,12 @@
                 <p id="date" class="text-2xl text-slate-300 font-light tracking-wide">載入中...</p>
                 <div class="flex gap-6 mt-6 justify-center text-sm border-t border-white/5 pt-4">
                     <div class="flex items-center gap-2">
-                        <span class="text-sky-400">🏠 室內</span>
+                        <span class="text-sky-400 font-bold">🏠 室內</span>
                         <span id="indoor-temp">--°C</span> / <span id="indoor-hum">--%</span>
                     </div>
-                    <div class="flex items-center gap-2 border-l border-white/10 pl-6 cursor-pointer" onclick="toggleVacuum()">
+                    <div class="flex items-center gap-2 border-l border-white/10 pl-6 cursor-pointer active:scale-95 transition-transform" onclick="toggleVacuum()">
                         <span class="text-amber-400">🧹</span>
-                        <span id="vacuum-status">待命</span>
+                        <span id="vacuum-status">連線中...</span>
                     </div>
                 </div>
             </div>
@@ -77,7 +52,7 @@
                     <div>
                         <div class="flex items-baseline gap-2">
                             <span id="temp" class="text-5xl font-bold tracking-tighter">--°C</span>
-                            <span id="weather-desc" class="text-sky-400 text-sm">同步中...</span>
+                            <span id="weather-desc" class="text-sky-400 text-sm font-bold uppercase">Clear</span>
                         </div>
                         <div class="flex items-center gap-3 text-[11px] text-slate-400 mt-1">
                             <span id="rain-pop">🌧 --%</span>
@@ -85,13 +60,12 @@
                         </div>
                     </div>
                 </div>
-                <div id="forecast-row" class="flex justify-between border-t border-white/5 pt-3 text-center">
-                    </div>
+                <div id="forecast-row" class="flex justify-between border-t border-white/5 pt-3 text-center"></div>
             </div>
             
             <div class="w-1/2 border-l border-white/10 pl-10 h-[120px] flex flex-col justify-center">
                 <div id="horo-sign" class="text-amber-400 text-xs font-bold tracking-widest uppercase mb-2">Horoscope</div>
-                <div id="horo-text" class="text-slate-300 text-sm leading-relaxed line-clamp-3">運勢抓取中...</div>
+                <div id="horo-text" class="text-slate-300 text-sm leading-relaxed line-clamp-3">載入中...</div>
             </div>
         </div>
 
@@ -107,15 +81,12 @@
     </div>
 
     <script>
-        // 配置區域
-        const HA_URL = 'http://localhost:8123'; 
-        const HA_TOKEN = 'YOUR_TOKEN'; 
         const API_KEY = '71530563aac2b604c442ba03e2bf1bd4';
         const LAT = '24.1627', LON = '120.6401';
+        const BRIDGE_URL = 'http://127.0.0.1:5000'; // 指向您的 Python Bridge
         const CAM_URLS = [
             "https://tcnvr6.taichung.gov.tw/9db0d761", "https://tcnvr5.taichung.gov.tw/ff2db7f1",
-            "https://tcnvr5.taichung.gov.tw/c9ec3cca", "https://tcnvr5.taichung.gov.tw/ba31aa33",
-            "https://tcnvr5.taichung.gov.tw/98b4f534", "https://tcnvr6.taichung.gov.tw/92cb8667"
+            "https://tcnvr5.taichung.gov.tw/c9ec3cca", "https://tcnvr5.taichung.gov.tw/ba31aa33"
         ];
         
         let camIdx = 0, allNews = [], newsIdx = 0, horoIdx = 0;
@@ -131,94 +102,89 @@
             document.getElementById('lunar').innerText = `農曆 ${lunar.replace(/年/, '')}`;
         }
 
+        // --- 與 Python Bridge 串接 ---
+        async function fetchSmartHome() {
+            try {
+                const r = await fetch(`${BRIDGE_URL}/api/status`);
+                const data = await r.json();
+                document.getElementById('indoor-temp').innerText = data.temp + '°C';
+                document.getElementById('indoor-hum').innerText = data.hum + '%';
+                document.getElementById('vacuum-status').innerText = `${data.vac_status} (${data.vac_battery}%)`;
+            } catch (e) {
+                document.getElementById('vacuum-status').innerText = "Bridge Offline";
+            }
+        }
+
+        async function toggleVacuum() {
+            const status = document.getElementById('vacuum-status').innerText;
+            const action = status.includes('Cleaning') || status.includes('清掃') ? 'stop' : 'start';
+            document.getElementById('vacuum-status').innerText = "Sending...";
+            try {
+                await fetch(`${BRIDGE_URL}/api/vacuum/${action}`);
+                setTimeout(fetchSmartHome, 1500); // 延時更新狀態
+            } catch (e) { alert("API Error"); }
+        }
+
         async function fetchEnvironment() {
             try {
                 const wr = await fetch(`https://api.openweathermap.org/data/2.5/forecast?lat=${LAT}&lon=${LON}&units=metric&appid=${API_KEY}&lang=zh_tw`);
                 const wd = await wr.json();
-                
-                // 1. 目前天氣
                 const cur = wd.list[0];
                 document.getElementById('temp').innerText = `${Math.round(cur.main.temp)}°C`;
-                document.getElementById('weather-desc').innerText = cur.weather[0].description;
+                document.getElementById('weather-desc').innerText = cur.weather[0].description.toUpperCase();
                 document.getElementById('rain-pop').innerText = `🌧 ${Math.round(cur.pop * 100)}%`;
                 document.getElementById('weather-icon').innerText = weatherIcons[cur.weather[0].main] || "☀️";
 
-                // 2. 預報橫條 (五天)
                 let forecastHtml = '';
                 for(let i=8; i<wd.list.length; i+=8) {
-                    const day = wd.list[i];
-                    forecastHtml += `
-                        <div class="flex-1">
-                            <div class="text-[9px] text-slate-500">${new Date(day.dt * 1000).toLocaleDateString('zh-TW', {weekday: 'short'})}</div>
-                            <div class="text-lg my-1">${weatherIcons[day.weather[0].main] || "☀️"}</div>
-                            <div class="text-xs font-bold">${Math.round(day.main.temp)}°</div>
-                        </div>`;
+                    const d = wd.list[i];
+                    forecastHtml += `<div><div class="text-[9px] text-slate-500">${new Date(d.dt * 1000).toLocaleDateString('zh-TW', {weekday: 'short'})}</div><div class="text-lg my-1">${weatherIcons[d.weather[0].main] || "☀️"}</div><div class="text-xs font-bold">${Math.round(d.main.temp)}°</div></div>`;
                 }
                 document.getElementById('forecast-row').innerHTML = forecastHtml;
-
-                // 3. 空氣品質
-                const ar = await fetch(`https://api.openweathermap.org/data/2.5/air_pollution?lat=${LAT}&lon=${LON}&appid=${API_KEY}`);
-                const ad = await ar.json();
-                const aqi = ad.list[0].main.aqi;
-                const aqiMap = [null, {t:"良好",c:"#10b981"}, {t:"良好",c:"#10b981"}, {t:"普通",c:"#f59e0b"}, {t:"不佳",c:"#ef4444"}, {t:"危害",c:"#7f1d1d"}];
-                document.getElementById('aqi-status').innerHTML = `<span class="aqi-dot" style="background:${aqiMap[aqi].c}"></span>AQI: ${aqiMap[aqi].t}`;
-            } catch (e) { console.error("天氣抓取失敗"); }
+            } catch (e) {}
         }
 
         async function updateHoroscope() {
             const sign = horoSigns[horoIdx], hText = document.getElementById('horo-text'), hSign = document.getElementById('horo-sign');
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 8000);
-
             try {
-                const resp = await fetch(`https://aztro.sameerkumar.website/?sign=${sign}&day=today`, { method: 'POST', signal: controller.signal });
+                const resp = await fetch(`https://aztro.sameerkumar.website/?sign=${sign}&day=today`, { method: 'POST' });
                 const data = await resp.json();
                 const tUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=zh-TW&dt=t&q=${encodeURIComponent(data.description)}`;
-                const tResp = await fetch(tUrl);
-                const tData = await tResp.json();
-                const chineseText = tData[0].map(item => item[0]).join('');
+                const tData = await fetch(tUrl).then(r => r.json());
                 hText.style.opacity = 0;
-                setTimeout(() => {
-                    hSign.innerText = horoNames[sign]; hText.innerText = chineseText; hText.style.opacity = 1;
-                }, 500);
-            } catch (e) {
-                const backups = { 'sagittarius': '今日運勢穩定，適合執行既定計畫。', 'capricorn': '專注力佳，一步一腳印將有收穫。' };
-                hSign.innerText = horoNames[sign]; hText.innerText = backups[sign];
-            } finally {
-                clearTimeout(timeoutId);
-                horoIdx = (horoIdx + 1) % horoSigns.length;
-            }
-        }
-
-        async function fetchNews() {
-            try {
-                const r = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=https://news.pts.org.tw/xml/newsfeed.xml`);
-                const d = await r.json(); allNews = d.items; rotateNews();
+                setTimeout(() => { hSign.innerText = horoNames[sign]; hText.innerText = tData[0][0][0]; hText.style.opacity = 1; }, 500);
             } catch (e) {}
-        }
-
-        function rotateNews() {
-            if (allNews.length === 0) return;
-            const list = allNews.slice(newsIdx, newsIdx + 3);
-            document.getElementById('news-list').innerHTML = list.map(i => `<div class="border-b border-white/5 pb-2"><p class="text-lg text-slate-100 font-light line-clamp-1">${i.title}</p></div>`).join('');
-            newsIdx = (newsIdx + 3) % (Math.max(allNews.length - 3, 1));
+            horoIdx = (horoIdx + 1) % horoSigns.length;
         }
 
         function rotateCam() {
             const p = document.getElementById('cam-player');
             p.style.opacity = '0';
-            setTimeout(() => {
-                p.src = CAM_URLS[camIdx]; p.style.opacity = '1';
-                camIdx = (camIdx + 1) % CAM_URLS.length;
-            }, 500);
+            setTimeout(() => { p.src = CAM_URLS[camIdx]; camIdx = (camIdx + 1) % CAM_URLS.length; p.style.opacity = '1'; }, 500);
         }
 
-        // 啟動定時任務
+        async function fetchNews() { 
+            try { 
+                const r = await fetch('https://api.rss2json.com/v1/api.json?rss_url=https://news.pts.org.tw/xml/newsfeed.xml'); 
+                const d = await r.json(); allNews = d.items; rotateNews(); 
+            } catch(e){} 
+        }
+
+        function rotateNews() { 
+            if(!allNews.length) return; 
+            const list = allNews.slice(newsIdx, newsIdx+3); 
+            document.getElementById('news-list').innerHTML = list.map(i => `<div class="border-b border-white/5 pb-2"><p class="text-lg text-slate-100 font-light line-clamp-1">${i.title}</p></div>`).join(''); 
+            newsIdx = (newsIdx+3) % (Math.max(allNews.length-3, 1)); 
+        }
+
+        // 初始化
         updateClock(); setInterval(updateClock, 1000);
         fetchEnvironment(); setInterval(fetchEnvironment, 600000);
-        fetchNews(); setInterval(rotateNews, 10000); setInterval(fetchNews, 900000);
+        fetchNews(); setInterval(rotateNews, 10000);
         updateHoroscope(); setInterval(updateHoroscope, 10000);
         rotateCam(); setInterval(rotateCam, 10000);
+        fetchSmartHome(); setInterval(fetchSmartHome, 5000); // 每 5 秒與 Python 同步一次
+        
         setTimeout(() => location.reload(), 3600000);
     </script>
 </body>
