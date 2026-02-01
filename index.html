@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Surface Go Home Dashboard</title>
+    <title>Surface Go Home Dashboard - Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@100;300;400;700&display=swap" rel="stylesheet">
     <style>
@@ -32,25 +32,20 @@
             justify-content: center;
         }
         .text-neon { text-shadow: 0 0 20px rgba(56, 189, 248, 0.4); }
-        /* 修正點：影像自動縮放與容器比例 */
         .camera-container { 
             aspect-ratio: 16 / 9; 
             width: 100%; 
             background: #000; 
             border-radius: 1.2rem; 
             overflow: hidden; 
-            display: flex;
-            align-items: center;
-            justify-content: center;
         }
         iframe { 
-            width: 100%; 
-            height: 100%; 
-            border: none; 
+            width: 100%; height: 100%; border: none; 
             transition: opacity 0.5s ease;
-            /* 確保內容適應 */
-            object-fit: contain; 
+            object-fit: contain; /* 影像自動縮放關鍵 */
         }
+        #horo-text { transition: opacity 0.5s ease; }
+        #news-list { transition: all 0.5s ease; }
     </style>
 </head>
 <body>
@@ -65,8 +60,8 @@
         </div>
 
         <div class="glass p-8 justify-start">
-            <h2 class="text-[10px] font-bold text-slate-500 mb-4 tracking-[0.4em] uppercase">Flash News (10s Update)</h2>
-            <div id="news-list" class="space-y-4 mb-6 min-h-[120px]">
+            <h2 class="text-[10px] font-bold text-slate-500 mb-4 tracking-[0.4em] uppercase">Flash News</h2>
+            <div id="news-list" class="space-y-4 mb-6 min-h-[140px]">
                 <p class="text-slate-600 text-sm italic">新聞連線中...</p>
             </div>
             <div class="border-t border-white/5 pt-4">
@@ -83,12 +78,13 @@
                 </div>
                 <div class="text-center border-l border-white/10 pl-8">
                     <div id="temp" class="text-6xl font-bold text-white tracking-tighter">--°C</div>
-                    <p id="weather-desc" class="text-sky-400 text-sm font-medium mt-1">同步中...</p>
+                    <div id="weather-desc" class="text-sky-400 text-sm font-medium mt-1">同步中...</div>
                 </div>
             </div>
-            <div id="horoscope-box" class="border-l border-white/10 pl-8 w-1/3">
-                <p id="horo-sign" class="text-amber-400 text-xs font-bold tracking-widest uppercase mb-1">Horoscope</p>
-                <p id="horo-text" class="text-slate-300 text-sm leading-relaxed transition-opacity duration-500">讀取中...</p>
+            
+            <div class="border-l border-white/10 pl-8 w-1/2">
+                <div id="horo-sign" class="text-amber-400 text-xs font-bold tracking-widest uppercase mb-1">Horoscope</div>
+                <div id="horo-text" class="text-slate-300 text-sm leading-relaxed line-clamp-3">正在取得今日運勢...</div>
             </div>
         </div>
 
@@ -98,7 +94,7 @@
                 <span class="w-1.5 h-1.5 bg-red-600 rounded-full animate-pulse"></span>
             </div>
             <div class="camera-container">
-                <iframe id="cam-player" src="" allow="autoplay"></iframe>
+                <iframe id="cam-player" src=""></iframe>
             </div>
         </div>
     </div>
@@ -114,30 +110,15 @@
             "https://tcnvr5.taichung.gov.tw/98b4f534",
             "https://tcnvr6.taichung.gov.tw/92cb8667"
         ];
+        
         let camIdx = 0;
         let allNews = [];
         let newsIdx = 0;
-
-        // 1. 星座運勢資料 (免費來源模擬與切換)
-        const horoData = [
-            { sign: "射手座 ♐", text: "今日直覺敏銳，適合規劃新計畫，社交運勢上升。" },
-            { sign: "摩羯座 ♑", text: "工作效率極高，保持冷靜處理繁瑣事務，財運穩定。" }
-        ];
         let horoIdx = 0;
+        const horoSigns = ['sagittarius', 'capricorn'];
+        const horoNames = { 'sagittarius': '射手座 ♐', 'capricorn': '摩羯座 ♑' };
 
-        function updateHoroscope() {
-            const hText = document.getElementById('horo-text');
-            const hSign = document.getElementById('horo-sign');
-            hText.style.opacity = 0;
-            setTimeout(() => {
-                hSign.innerText = horoData[horoIdx].sign;
-                hText.innerText = horoData[horoIdx].text;
-                hText.style.opacity = 1;
-                horoIdx = (horoIdx + 1) % horoData.length;
-            }, 500);
-        }
-
-        // 2. 時鐘功能
+        // 1. 時鐘
         function updateClock() {
             const n = new Date();
             document.getElementById('clock').innerText = n.toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit', hour12: false });
@@ -146,7 +127,7 @@
             document.getElementById('lunar').innerText = `農曆 ${lunar.replace(/年/, '')}`;
         }
 
-        // 3. 天氣功能
+        // 2. 天氣
         async function fetchWeather() {
             try {
                 const r = await fetch(`https://api.openweathermap.org/data/2.5/forecast?lat=${LAT}&lon=${LON}&units=metric&appid=${API_KEY}&lang=zh_tw`);
@@ -154,34 +135,60 @@
                 const cur = d.list[0];
                 document.getElementById('temp').innerText = `${Math.round(cur.main.temp)}°C`;
                 document.getElementById('weather-desc').innerText = cur.weather[0].description;
-                const ts = d.list.slice(0, 8).map(i => i.main.temp);
                 const icons = { "Clear": "☀️", "Clouds": "☁️", "Rain": "🌧️", "Drizzle": "🌦️", "Thunderstorm": "⛈️" };
                 document.getElementById('weather-icon').innerText = icons[cur.weather[0].main] || "☀️";
             } catch (e) {}
         }
 
-        // 4. 新聞功能 (每 10 秒更新輪播)
+        // 3. 星座運勢 (自動抓取 + Google 翻譯)
+        async function updateHoroscope() {
+            const sign = horoSigns[horoIdx];
+            const hText = document.getElementById('horo-text');
+            const hSign = document.getElementById('horo-sign');
+            
+            try {
+                const resp = await fetch(`https://aztro.sameerkumar.website/?sign=${sign}&day=today`, { method: 'POST' });
+                const data = await resp.json();
+                const englishText = data.description;
+
+                // Google Translate API (Free mirror)
+                const tUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=zh-TW&dt=t&q=${encodeURIComponent(englishText)}`;
+                const tResp = await fetch(tUrl);
+                const tData = await tResp.json();
+                const chineseText = tData[0].map(item => item[0]).join('');
+
+                hText.style.opacity = 0;
+                setTimeout(() => {
+                    hSign.innerText = horoNames[sign];
+                    hText.innerText = chineseText;
+                    hText.style.opacity = 1;
+                }, 500);
+            } catch (e) { hText.innerText = "運勢更新中..."; }
+            horoIdx = (horoIdx + 1) % horoSigns.length;
+        }
+
+        // 4. 新聞 (10秒更新)
         async function fetchNews() {
             try {
                 const r = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=https://news.pts.org.tw/xml/newsfeed.xml`);
                 const d = await r.json();
                 allNews = d.items;
-                displayNews();
+                rotateNews();
             } catch (e) {}
         }
 
-        function displayNews() {
+        function rotateNews() {
             if (allNews.length === 0) return;
-            const newsList = allNews.slice(newsIdx, newsIdx + 3);
-            document.getElementById('news-list').innerHTML = newsList.map(i => `
-                <div class="border-b border-white/5 pb-2 transition-all duration-500">
+            const list = allNews.slice(newsIdx, newsIdx + 3);
+            document.getElementById('news-list').innerHTML = list.map(i => `
+                <div class="border-b border-white/5 pb-2">
                     <p class="text-lg text-slate-100 font-light line-clamp-1">${i.title}</p>
                 </div>
             `).join('');
-            newsIdx = (newsIdx + 3) % (allNews.length - 3);
+            newsIdx = (newsIdx + 3) % (Math.max(allNews.length - 3, 1));
         }
 
-        // 5. 影像輪播 (10 秒切換)
+        // 5. 影像輪播 (10秒 & 自動縮放)
         function rotateCam() {
             const player = document.getElementById('cam-player');
             const tag = document.getElementById('cam-tag');
@@ -194,17 +201,15 @@
             }, 500);
         }
 
-        // 定時器設定
+        // 初始化與定時器
         updateClock(); setInterval(updateClock, 1000);
         fetchWeather(); setInterval(fetchWeather, 600000);
-        
-        fetchNews(); 
-        setInterval(displayNews, 10000); // 新聞 10 秒更換顯示內容
-        setInterval(fetchNews, 900000);   // 每 15 分鐘重新抓取一次新聞源
+        fetchNews(); setInterval(rotateNews, 10000); // 新聞 10s 更新
+        setInterval(fetchNews, 900000); // 15分鐘重新抓取新聞源
+        updateHoroscope(); setInterval(updateHoroscope, 10000); // 運勢 10s 輪播
+        rotateCam(); setInterval(rotateCam, 10000); // 影像 10s 輪播
 
-        updateHoroscope(); setInterval(updateHoroscope, 10000); // 運勢 10 秒輪播
-        rotateCam(); setInterval(rotateCam, 10000);             // 影像 10 秒輪播
-
+        // 每小時自動重新整理頁面
         setTimeout(() => location.reload(), 3600000);
     </script>
 </body>
