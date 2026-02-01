@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Surface Go Home Dashboard - Fixed Layout</title>
+    <title>Surface Go Home Dashboard - Professional Edition</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@100;300;400;700&display=swap" rel="stylesheet">
     <style>
@@ -39,6 +39,7 @@
         }
         iframe { width: 100%; height: 100%; border: none; transition: opacity 0.5s ease; object-fit: contain; }
         .aqi-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; margin-right: 4px; }
+        #horo-text { transition: opacity 0.5s ease; }
     </style>
 </head>
 <body>
@@ -46,18 +47,26 @@
     <div class="dashboard-container">
         <div class="glass items-center text-center">
             <div id="clock" class="text-[9rem] font-thin leading-none text-neon">00:00</div>
-            <div class="mt-4">
+            <div class="mt-2">
                 <p id="date" class="text-2xl text-slate-300 font-light tracking-wide">2026年2月1日</p>
-                <p id="lunar" class="text-xl text-amber-200/60 mt-1 italic">農曆 載入中...</p>
+                <div class="flex gap-6 mt-6 justify-center text-sm border-t border-white/5 pt-4">
+                    <div class="flex items-center gap-2">
+                        <span class="text-sky-400">🏠 室內</span>
+                        <span id="indoor-temp">--°C</span> / <span id="indoor-hum">--%</span>
+                    </div>
+                    <div class="flex items-center gap-2 border-l border-white/10 pl-6">
+                        <span class="text-amber-400">🧹 掃地機</span>
+                        <span id="vacuum-status">待命</span>
+                    </div>
+                </div>
             </div>
         </div>
 
         <div class="glass p-8 justify-start">
             <h2 class="text-[10px] font-bold text-slate-500 mb-4 tracking-[0.4em] uppercase">Flash News</h2>
             <div id="news-list" class="space-y-4 mb-6 min-h-[140px]"></div>
-            <div class="border-t border-white/5 pt-4">
-                <div class="flex items-center gap-3 mb-2"><div class="w-1 h-1 bg-sky-500 rounded-full"></div><p class="text-base text-slate-300">出門記得帶傘</p></div>
-                <div class="flex items-center gap-3"><div class="w-1 h-1 bg-amber-500 rounded-full"></div><p class="text-base text-slate-300">19:30 垃圾車時間</p></div>
+            <div class="border-t border-white/5 pt-4 text-slate-400 text-sm italic">
+                <p id="lunar">農曆 載入中...</p>
             </div>
         </div>
 
@@ -76,13 +85,12 @@
                         </div>
                     </div>
                 </div>
-                <div id="forecast-row" class="flex justify-between border-t border-white/5 pt-3">
-                    </div>
+                <div id="forecast-row" class="flex justify-between border-t border-white/5 pt-3"></div>
             </div>
             
             <div class="w-1/2 border-l border-white/10 pl-10 h-[120px] flex flex-col justify-center">
                 <div id="horo-sign" class="text-amber-400 text-xs font-bold tracking-widest uppercase mb-2">Horoscope</div>
-                <div id="horo-text" class="text-slate-300 text-sm leading-relaxed line-clamp-3 transition-opacity duration-500">載入運勢中...</div>
+                <div id="horo-text" class="text-slate-300 text-sm leading-relaxed line-clamp-3">運勢抓取中...</div>
             </div>
         </div>
 
@@ -98,6 +106,9 @@
     </div>
 
     <script>
+        // 配置區域
+        const HA_URL = 'http://YOUR_HA_IP:8123'; // 如果有 Home Assistant 請填寫
+        const HA_TOKEN = 'YOUR_TOKEN'; 
         const API_KEY = '71530563aac2b604c442ba03e2bf1bd4';
         const LAT = '24.1627', LON = '120.6401';
         const CAM_URLS = [
@@ -121,7 +132,6 @@
 
         async function fetchEnvironment() {
             try {
-                // 1. 天氣
                 const wr = await fetch(`https://api.openweathermap.org/data/2.5/forecast?lat=${LAT}&lon=${LON}&units=metric&appid=${API_KEY}&lang=zh_tw`);
                 const wd = await wr.json();
                 const cur = wd.list[0];
@@ -130,7 +140,6 @@
                 document.getElementById('rain-pop').innerText = `🌧 ${Math.round(cur.pop * 100)}%`;
                 document.getElementById('weather-icon').innerText = weatherIcons[cur.weather[0].main] || "☀️";
 
-                // 2. 一週預報渲染 (取每天中午的數據)
                 let forecastHtml = '';
                 for(let i=8; i<wd.list.length; i+=8) {
                     const day = wd.list[i];
@@ -143,19 +152,21 @@
                 }
                 document.getElementById('forecast-row').innerHTML = forecastHtml;
 
-                // 3. 空氣品質
                 const ar = await fetch(`https://api.openweathermap.org/data/2.5/air_pollution?lat=${LAT}&lon=${LON}&appid=${API_KEY}`);
                 const ad = await ar.json();
                 const aqi = ad.list[0].main.aqi;
                 const aqiMap = [null, {t:"良好",c:"#10b981"}, {t:"良好",c:"#10b981"}, {t:"普通",c:"#f59e0b"}, {t:"不佳",c:"#ef4444"}, {t:"危害",c:"#7f1d1d"}];
                 document.getElementById('aqi-status').innerHTML = `<span class="aqi-dot" style="background:${aqiMap[aqi].c}"></span>AQI: ${aqiMap[aqi].t}`;
-            } catch (e) {}
+            } catch (e) { console.error("天氣抓取失敗"); }
         }
 
         async function updateHoroscope() {
             const sign = horoSigns[horoIdx], hText = document.getElementById('horo-text'), hSign = document.getElementById('horo-sign');
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 8000);
+
             try {
-                const resp = await fetch(`https://aztro.sameerkumar.website/?sign=${sign}&day=today`, { method: 'POST' });
+                const resp = await fetch(`https://aztro.sameerkumar.website/?sign=${sign}&day=today`, { method: 'POST', signal: controller.signal });
                 const data = await resp.json();
                 const tUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=zh-TW&dt=t&q=${encodeURIComponent(data.description)}`;
                 const tResp = await fetch(tUrl);
@@ -165,8 +176,13 @@
                 setTimeout(() => {
                     hSign.innerText = horoNames[sign]; hText.innerText = chineseText; hText.style.opacity = 1;
                 }, 500);
-            } catch (e) {}
-            horoIdx = (horoIdx + 1) % horoSigns.length;
+            } catch (e) {
+                const backups = { 'sagittarius': '射手座今日運勢穩定，適合保持愉快心情執行計畫。', 'capricorn': '摩羯座今日專注力佳，一步一腳印將有豐碩收穫。' };
+                hSign.innerText = horoNames[sign]; hText.innerText = backups[sign];
+            } finally {
+                clearTimeout(timeoutId);
+                horoIdx = (horoIdx + 1) % horoSigns.length;
+            }
         }
 
         async function fetchNews() {
@@ -192,13 +208,14 @@
             }, 500);
         }
 
+        // 定時任務啟動
         updateClock(); setInterval(updateClock, 1000);
-        fetchEnvironment(); setInterval(fetchEnvironment, 600000);
-        fetchNews(); setInterval(rotateNews, 10000);
-        setInterval(fetchNews, 900000);
-        updateHoroscope(); setInterval(updateHoroscope, 10000);
-        rotateCam(); setInterval(rotateCam, 10000);
-        setTimeout(() => location.reload(), 3600000);
+        fetchEnvironment(); setInterval(fetchEnvironment, 600000); // 10分更新一次天氣
+        fetchNews(); setInterval(rotateNews, 10000); // 10秒更新新聞標題
+        setInterval(fetchNews, 900000); // 15分抓取新新聞源
+        updateHoroscope(); setInterval(updateHoroscope, 10000); // 10秒輪播星座
+        rotateCam(); setInterval(rotateCam, 10000); // 10秒輪播影像
+        setTimeout(() => location.reload(), 3600000); // 每小時頁面重整
     </script>
 </body>
 </html>
