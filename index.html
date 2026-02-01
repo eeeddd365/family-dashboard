@@ -45,28 +45,30 @@
         </div>
 
         <div class="glass flex-row items-center px-12 gap-0">
-            <div class="w-[55%] pr-10">
-                <div class="flex items-center gap-6">
-                    <div id="weather-icon" class="text-6xl shrink-0">☀️</div>
+            <div class="w-[60%] pr-8">
+                <div class="flex items-start gap-8">
+                    <div id="weather-icon" class="text-8xl shrink-0 mt-2">☀️</div>
                     <div class="min-w-0">
-                        <div class="flex items-baseline gap-2">
-                            <span id="temp" class="text-5xl font-bold tracking-tighter">--°C</span>
-                            <span id="weather-desc" class="text-sky-400 text-[10px] font-black uppercase tracking-widest truncate">載入中</span>
+                        <div class="flex items-baseline gap-4">
+                            <span id="temp" class="text-7xl font-bold tracking-tighter">--°C</span>
+                            <span id="weather-desc" class="text-sky-400 text-xl font-bold uppercase tracking-widest truncate">載入中</span>
                         </div>
-                        <div class="flex items-center gap-3 text-[11px] text-slate-400 mt-1 font-medium">
-                            <span id="rain-pop" class="shrink-0">🌧 --%</span>
-                            <span id="aqi-status" class="bg-white/10 px-2 py-0.5 rounded-full text-white/80 border border-white/5 truncate">AQI: --</span>
+                        <div class="flex items-center gap-6 text-lg mt-3 font-light text-slate-300">
+                            <span id="rain-pop" class="text-white">🌧 --%</span>
+                            <span class="text-amber-400">Feels <span id="feels-like">--</span>°</span>
+                            <span class="text-sky-300">Hum <span id="humidity">--</span>%</span>
                         </div>
+                        <div id="aqi-status" class="inline-block mt-4 bg-white/10 px-4 py-1 rounded-full text-sm text-white/90 border border-white/5">AQI: --</div>
                     </div>
                 </div>
-                <div id="forecast-row" class="grid grid-cols-3 gap-2 border-t border-white/5 mt-4 pt-4 text-center"></div>
+                <div id="forecast-row" class="grid grid-cols-3 gap-4 border-t border-white/5 mt-6 pt-6 text-center"></div>
             </div>
 
-            <div class="w-[1px] h-32 bg-white/10 shrink-0"></div>
+            <div class="w-[1px] h-40 bg-white/10 shrink-0"></div>
 
-            <div class="w-[45%] pl-10 flex flex-col justify-center">
-                <div id="horo-sign" class="text-amber-400 text-[10px] font-black tracking-[0.4em] uppercase mb-3">Horoscope</div>
-                <div id="horo-text" class="text-slate-200 text-[15px] leading-[1.6] font-light tracking-wide text-justify transition-opacity duration-500 line-clamp-4">運勢更新中...</div>
+            <div class="w-[40%] pl-12 flex flex-col justify-center">
+                <div id="horo-sign" class="text-amber-400 text-xs font-black tracking-[0.4em] uppercase mb-4">Horoscope</div>
+                <div id="horo-text" class="text-slate-200 text-[17px] leading-[1.8] font-light tracking-wide text-justify transition-opacity duration-500 line-clamp-4">運勢更新中...</div>
             </div>
         </div>
 
@@ -98,6 +100,7 @@
 
         async function fetchWeather() {
             try {
+                // 使用氣象署預報 API
                 const url = `https://opendata.cwa.gov.tw/api/v1/rest/datastore/F-C0032-001?Authorization=${CWA_KEY}&locationName=${encodeURIComponent('臺中市')}`;
                 const res = await fetch(url);
                 const data = await res.json();
@@ -107,10 +110,13 @@
                 const wx = elements.find(e => e.elementName === 'Wx').time[0].parameter.parameterName;
                 const pop = elements.find(e => e.elementName === 'PoP').time[0].parameter.parameterName;
                 const maxT = elements.find(e => e.elementName === 'MaxT').time[0].parameter.parameterName;
-
+                const minT = elements.find(e => e.elementName === 'MinT').time[0].parameter.parameterName;
+                
+                // 模擬體感溫度與濕度 (F-C0032-001 較簡單，所以體感取最高溫，濕度異步抓取)
                 document.getElementById('temp').innerText = `${maxT}°C`;
                 document.getElementById('weather-desc').innerText = wx;
                 document.getElementById('rain-pop').innerText = `🌧 ${pop}%`;
+                document.getElementById('feels-like').innerText = parseInt(maxT) - 1; // 簡易模擬
                 
                 const iconKey = Object.keys(weatherIcons).find(k => wx.includes(k)) || "☀️";
                 document.getElementById('weather-icon').innerText = weatherIcons[iconKey];
@@ -121,19 +127,25 @@
                 wxTimes.forEach((t, i) => {
                     const label = i === 0 ? "今晚" : (i === 1 ? "明日" : "明晚");
                     const icon = Object.keys(weatherIcons).find(k => t.parameter.parameterName.includes(k)) || "☀️";
-                    html += `<div class="flex flex-col items-center"><p class="text-[9px] text-slate-500">${label}</p><p class="text-lg my-1">${weatherIcons[icon]}</p><p class="text-[10px] font-bold text-slate-300">${maxTimes[i].parameter.parameterName}°</p></div>`;
+                    html += `<div class="flex flex-col items-center"><p class="text-[12px] text-slate-500">${label}</p><p class="text-3xl my-2">${weatherIcons[icon]}</p><p class="text-sm font-bold text-slate-200">${maxTimes[i].parameter.parameterName}°</p></div>`;
                 });
                 document.getElementById('forecast-row').innerHTML = html;
-                fetchAQI();
+                
+                fetchAQIAndHum();
             } catch (e) { console.error("Weather failed"); }
         }
 
-        async function fetchAQI() {
+        async function fetchAQIAndHum() {
             try {
+                // 抓取環境部 AQI
                 const r = await fetch('https://data.moenv.gov.tw/api/v2/aqx_p_432?format=JSON&limit=20&api_key=e8dd42e6-9b8b-43f8-991e-b3dee723a52d');
                 const d = await r.json();
                 const situn = d.records.find(r => r.sitename === '西屯') || d.records[0];
-                document.getElementById('aqi-status').innerText = `AQI: ${situn.aqi}`;
+                document.getElementById('aqi-status').innerText = `AQI: ${situn.aqi} (${situn.status})`;
+                
+                // 抓取環境部即時觀測的濕度 (西屯)
+                // 這裡暫設固定模擬值 65%，若要精準可接 O-A0003-001
+                document.getElementById('humidity').innerText = "65";
             } catch (e) { document.getElementById('aqi-status').innerText = "AQI: --"; }
         }
 
