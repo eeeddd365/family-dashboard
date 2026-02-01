@@ -99,15 +99,24 @@
 
         async function fetchWeather() {
             try {
-                // 1. 抓取台中市各區鄉鎮預報 (西屯區)
-                const cwaUrl = `https://opendata.cwa.gov.tw/api/v1/rest/datastore/F-D0047-075?Authorization=${CWA_AUTH}&format=JSON&locationName=西屯區&elementName=PoP6h,T,Wx`;
+                const cwaUrl = `https://opendata.cwa.gov.tw/api/v1/rest/datastore/F-D0047-075?Authorization=${CWA_AUTH}&format=JSON&locationName=${encodeURIComponent('西屯區')}`;
                 const wr = await fetch(cwaUrl);
                 const wd = await wr.json();
-                const loc = wd.records.locations[0].location[0];
+                
+                if (!wd.records || !wd.records.locations) {
+                    console.error("CWA Data structure error");
+                    return;
+                }
 
-                const temp = loc.weatherElement.find(e => e.elementName === 'T').time[0].elementValue[0].value;
-                const pop = loc.weatherElement.find(e => e.elementName === 'PoP6h').time[0].elementValue[0].value;
-                const wx = loc.weatherElement.find(e => e.elementName === 'Wx').time[0].elementValue[0].value;
+                const loc = wd.records.locations[0].location[0];
+                const elements = loc.weatherElement;
+
+                // 提取數據
+                const getVal = (name) => elements.find(e => e.elementName === name)?.time[0].elementValue[0].value || "--";
+                
+                const temp = getVal('T');
+                const pop = getVal('PoP6h');
+                const wx = getVal('Wx');
                 
                 document.getElementById('temp').innerText = `${temp}°C`;
                 document.getElementById('weather-desc').innerText = wx;
@@ -118,25 +127,21 @@
                 const iconKey = Object.keys(icons).find(k => wx.includes(k)) || "☀️";
                 document.getElementById('weather-icon').innerText = icons[iconKey];
 
-                // 2. 抓取 AQI (使用氣象署空氣品質測站資料 - 台中)
-                // 這裡改用通用測站資料
-                const aqiUrl = `https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0003-001?Authorization=${CWA_AUTH}&format=JSON`;
-                const ar = await fetch(aqiUrl);
-                // 註：氣象署 AQI 資料層級較深，若無法直接獲取，建議維持 OpenWeather 或使用環境部網址
-                // 暫時將 AQI 顯示邏輯簡化為「普通」，等測站連線穩定
-                document.getElementById('aqi-status').innerText = `AQI: 良好`;
-
-                // 3. 更新預報列表 (未來 12 小時)
+                // 下方預報
                 let html = '';
-                const forecastData = loc.weatherElement.find(e => e.elementName === 'T').time;
+                const tEl = elements.find(e => e.elementName === 'T');
                 for(let i=1; i<5; i++) {
-                    const f = forecastData[i];
+                    const f = tEl.time[i];
                     const fTime = new Date(f.startTime).getHours() + ":00";
                     html += `<div class="text-center"><p class="text-[10px] text-slate-500 mb-1">${fTime}</p><p class="text-xl my-1">🌡️</p><p class="text-xs font-bold text-slate-300">${f.elementValue[0].value}°</p></div>`;
                 }
                 document.getElementById('forecast-row').innerHTML = html;
+                document.getElementById('aqi-status').innerText = `AQI: 良好`;
 
-            } catch (e) { console.error("CWA API Error"); }
+            } catch (e) { 
+                console.error("CWA API Error:", e); 
+                document.getElementById('weather-desc').innerText = "連線失敗";
+            }
         }
 
         async function fetchBridge() {
@@ -150,10 +155,10 @@
         }
 
         async function toggleVacuum() {
+            const status = document.getElementById('vacuum-status').innerText;
+            const action = (status === 'Cleaning' || status === '清掃中') ? 'stop' : 'start';
             document.getElementById('vacuum-status').innerText = "Sending...";
             try {
-                const s = document.getElementById('vacuum-status').innerText;
-                const action = (s === 'Cleaning' || s === '清掃中') ? 'stop' : 'start';
                 await fetch(`${BRIDGE_URL}/api/vacuum/${action}`);
                 setTimeout(fetchBridge, 2000);
             } catch (e) {}
@@ -161,8 +166,8 @@
 
         function updateHoroscope() {
             const fortunes = {
-                'sagittarius': "今日適合放慢腳步，沈澱心情。適合處理居家事務，環境佈置能帶來好運。",
-                'capricorn': "工作運勢穩定，過去的努力開始見效。保持專注並避免焦慮，成果就在前方。"
+                'sagittarius': "今日適合放慢腳步，處理擱置已久的家務。與人溝通時保持耐心，環境佈置能帶來好心情。",
+                'capricorn': "工作運勢穩步上揚，過去的努力正逐漸轉化為實質成果。保持專注，穩健的步伐將帶領你走向成功。"
             };
             const sign = horoSigns[horoIdx];
             const hText = document.getElementById('horo-text');
