@@ -15,13 +15,12 @@
             color: #f1f5f9;
             font-family: 'Noto Sans TC', sans-serif;
         }
-        /* 針對 Surface Go 3:2 螢幕比例設計 */
         .dashboard-container {
             height: 100vh; width: 100vw;
             padding: 1.5rem;
             display: grid;
-            grid-template-columns: 1fr 1fr; /* 左右對等分 */
-            grid-template-rows: 1.5fr 1fr; /* 上下分配 */
+            grid-template-columns: 1fr 1fr; 
+            grid-template-rows: 1.5fr 1fr; 
             gap: 1.5rem;
         }
         .glass {
@@ -33,8 +32,25 @@
             justify-content: center;
         }
         .text-neon { text-shadow: 0 0 20px rgba(56, 189, 248, 0.4); }
-        .camera-container { aspect-ratio: 16 / 9; width: 100%; background: #000; border-radius: 1.2rem; overflow: hidden; }
-        iframe { width: 100%; height: 100%; border: none; transition: opacity 0.5s ease; }
+        /* 修正點：影像自動縮放與容器比例 */
+        .camera-container { 
+            aspect-ratio: 16 / 9; 
+            width: 100%; 
+            background: #000; 
+            border-radius: 1.2rem; 
+            overflow: hidden; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        iframe { 
+            width: 100%; 
+            height: 100%; 
+            border: none; 
+            transition: opacity 0.5s ease;
+            /* 確保內容適應 */
+            object-fit: contain; 
+        }
     </style>
 </head>
 <body>
@@ -49,8 +65,8 @@
         </div>
 
         <div class="glass p-8 justify-start">
-            <h2 class="text-[10px] font-bold text-slate-500 mb-4 tracking-[0.4em] uppercase">Flash News</h2>
-            <div id="news-list" class="space-y-4 mb-6">
+            <h2 class="text-[10px] font-bold text-slate-500 mb-4 tracking-[0.4em] uppercase">Flash News (10s Update)</h2>
+            <div id="news-list" class="space-y-4 mb-6 min-h-[120px]">
                 <p class="text-slate-600 text-sm italic">新聞連線中...</p>
             </div>
             <div class="border-t border-white/5 pt-4">
@@ -59,18 +75,20 @@
             </div>
         </div>
 
-        <div class="glass flex-row items-center justify-around px-8">
-            <div class="text-center">
-                <div id="weather-icon" class="text-6xl mb-1">☀️</div>
-                <p class="text-slate-500 text-[10px] uppercase tracking-widest">Xitun District</p>
-            </div>
-            <div class="text-center border-l border-white/10 pl-8">
-                <div id="temp" class="text-6xl font-bold text-white tracking-tighter">--°C</div>
-                <p id="weather-desc" class="text-sky-400 text-sm font-medium mt-1">同步中...</p>
-                <div class="flex gap-3 mt-2 text-[10px] text-slate-500 font-light">
-                    <span id="pop">降雨 --%</span>
-                    <span id="temp-range">-- / --</span>
+        <div class="glass flex-row items-center justify-around px-8 gap-4">
+            <div class="flex items-center gap-6">
+                <div class="text-center">
+                    <div id="weather-icon" class="text-6xl mb-1">☀️</div>
+                    <p class="text-slate-500 text-[10px] uppercase tracking-widest">Xitun District</p>
                 </div>
+                <div class="text-center border-l border-white/10 pl-8">
+                    <div id="temp" class="text-6xl font-bold text-white tracking-tighter">--°C</div>
+                    <p id="weather-desc" class="text-sky-400 text-sm font-medium mt-1">同步中...</p>
+                </div>
+            </div>
+            <div id="horoscope-box" class="border-l border-white/10 pl-8 w-1/3">
+                <p id="horo-sign" class="text-amber-400 text-xs font-bold tracking-widest uppercase mb-1">Horoscope</p>
+                <p id="horo-text" class="text-slate-300 text-sm leading-relaxed transition-opacity duration-500">讀取中...</p>
             </div>
         </div>
 
@@ -80,7 +98,7 @@
                 <span class="w-1.5 h-1.5 bg-red-600 rounded-full animate-pulse"></span>
             </div>
             <div class="camera-container">
-                <iframe id="cam-player" src=""></iframe>
+                <iframe id="cam-player" src="" allow="autoplay"></iframe>
             </div>
         </div>
     </div>
@@ -97,7 +115,29 @@
             "https://tcnvr6.taichung.gov.tw/92cb8667"
         ];
         let camIdx = 0;
+        let allNews = [];
+        let newsIdx = 0;
 
+        // 1. 星座運勢資料 (免費來源模擬與切換)
+        const horoData = [
+            { sign: "射手座 ♐", text: "今日直覺敏銳，適合規劃新計畫，社交運勢上升。" },
+            { sign: "摩羯座 ♑", text: "工作效率極高，保持冷靜處理繁瑣事務，財運穩定。" }
+        ];
+        let horoIdx = 0;
+
+        function updateHoroscope() {
+            const hText = document.getElementById('horo-text');
+            const hSign = document.getElementById('horo-sign');
+            hText.style.opacity = 0;
+            setTimeout(() => {
+                hSign.innerText = horoData[horoIdx].sign;
+                hText.innerText = horoData[horoIdx].text;
+                hText.style.opacity = 1;
+                horoIdx = (horoIdx + 1) % horoData.length;
+            }, 500);
+        }
+
+        // 2. 時鐘功能
         function updateClock() {
             const n = new Date();
             document.getElementById('clock').innerText = n.toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit', hour12: false });
@@ -106,33 +146,42 @@
             document.getElementById('lunar').innerText = `農曆 ${lunar.replace(/年/, '')}`;
         }
 
+        // 3. 天氣功能
         async function fetchWeather() {
             try {
                 const r = await fetch(`https://api.openweathermap.org/data/2.5/forecast?lat=${LAT}&lon=${LON}&units=metric&appid=${API_KEY}&lang=zh_tw`);
                 const d = await r.json();
                 const cur = d.list[0];
                 document.getElementById('temp').innerText = `${Math.round(cur.main.temp)}°C`;
-                document.getElementById('pop').innerText = `降雨 ${Math.round(cur.pop * 100)}%`;
                 document.getElementById('weather-desc').innerText = cur.weather[0].description;
                 const ts = d.list.slice(0, 8).map(i => i.main.temp);
-                document.getElementById('temp-range').innerText = `${Math.round(Math.min(...ts))}° / ${Math.round(Math.max(...ts))}°`;
                 const icons = { "Clear": "☀️", "Clouds": "☁️", "Rain": "🌧️", "Drizzle": "🌦️", "Thunderstorm": "⛈️" };
                 document.getElementById('weather-icon').innerText = icons[cur.weather[0].main] || "☀️";
             } catch (e) {}
         }
 
+        // 4. 新聞功能 (每 10 秒更新輪播)
         async function fetchNews() {
             try {
                 const r = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=https://news.pts.org.tw/xml/newsfeed.xml`);
                 const d = await r.json();
-                document.getElementById('news-list').innerHTML = d.items.slice(0, 3).map(i => `
-                    <div class="border-b border-white/5 pb-2">
-                        <p class="text-lg text-slate-100 font-light line-clamp-1">${i.title}</p>
-                    </div>
-                `).join('');
+                allNews = d.items;
+                displayNews();
             } catch (e) {}
         }
 
+        function displayNews() {
+            if (allNews.length === 0) return;
+            const newsList = allNews.slice(newsIdx, newsIdx + 3);
+            document.getElementById('news-list').innerHTML = newsList.map(i => `
+                <div class="border-b border-white/5 pb-2 transition-all duration-500">
+                    <p class="text-lg text-slate-100 font-light line-clamp-1">${i.title}</p>
+                </div>
+            `).join('');
+            newsIdx = (newsIdx + 3) % (allNews.length - 3);
+        }
+
+        // 5. 影像輪播 (10 秒切換)
         function rotateCam() {
             const player = document.getElementById('cam-player');
             const tag = document.getElementById('cam-tag');
@@ -145,10 +194,17 @@
             }, 500);
         }
 
+        // 定時器設定
         updateClock(); setInterval(updateClock, 1000);
         fetchWeather(); setInterval(fetchWeather, 600000);
-        fetchNews(); setInterval(fetchNews, 900000);
-        rotateCam(); setInterval(rotateCam, 5000);
+        
+        fetchNews(); 
+        setInterval(displayNews, 10000); // 新聞 10 秒更換顯示內容
+        setInterval(fetchNews, 900000);   // 每 15 分鐘重新抓取一次新聞源
+
+        updateHoroscope(); setInterval(updateHoroscope, 10000); // 運勢 10 秒輪播
+        rotateCam(); setInterval(rotateCam, 10000);             // 影像 10 秒輪播
+
         setTimeout(() => location.reload(), 3600000);
     </script>
 </body>
