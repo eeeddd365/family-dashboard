@@ -2,88 +2,100 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Xitun Smart Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Xitun Premium Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@100;300;400;700&display=swap" rel="stylesheet">
     <style>
         body {
             background: #020617;
-            color: #f8fafc;
+            color: #f1f5f9;
             font-family: 'Noto Sans TC', sans-serif;
-            overflow: hidden;
+            overflow: hidden; /* 嚴格禁止捲軸 */
             cursor: none;
         }
         .glass {
             background: rgba(255, 255, 255, 0.02);
-            backdrop-filter: blur(30px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 2rem;
+            backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 2.5rem;
         }
-        .text-neon { text-shadow: 0 0 20px rgba(56, 189, 248, 0.4); }
+        .text-neon { text-shadow: 0 0 25px rgba(56, 189, 248, 0.4); }
+        iframe { transition: opacity 0.5s ease-in-out; }
+        .camera-container::after {
+            content: "LIVE CAMERA";
+            position: absolute; top: 10px; left: 10px;
+            background: rgba(220, 38, 38, 0.8);
+            padding: 2px 8px; border-radius: 4px;
+            font-size: 10px; font-weight: bold;
+        }
     </style>
 </head>
-<body class="h-screen w-screen p-6 grid grid-cols-12 grid-rows-6 gap-6">
+<body class="h-screen w-screen p-6 grid grid-cols-12 grid-rows-6 gap-5">
 
-    <div class="col-span-5 row-span-4 glass p-10 flex flex-col justify-center items-center text-center">
-        <div id="clock" class="text-[10rem] font-light leading-none text-white text-neon">00:00</div>
-        <div class="mt-8">
-            <span id="date" class="text-4xl text-slate-200 font-medium">2026年2月1日</span>
-            <span id="day" class="block text-xl text-slate-500 mt-2 tracking-[0.5em] uppercase">Sunday</span>
+    <div class="col-span-5 row-span-4 glass flex flex-col justify-center items-center">
+        <div id="clock" class="text-[11rem] font-thin leading-none tracking-tighter text-neon">00:00</div>
+        <div class="mt-4 text-center">
+            <span id="date" class="text-3xl font-light text-slate-300">2026年2月1日</span>
+            <span id="lunar" class="text-2xl text-amber-200/60 block mt-2 font-light">農曆 載入中...</span>
         </div>
-        <div id="lunar" class="mt-4 text-2xl text-amber-200/70 italic font-light">農曆 載入中...</div>
     </div>
 
-    <div class="col-span-7 row-span-2 glass p-8 flex items-center justify-around">
-        <div class="text-center">
-            <p class="text-sky-400 text-sm mb-1">西屯區 青海路</p>
-            <div id="temp" class="text-7xl font-bold text-white tracking-tighter">--°C</div>
-            <div id="weather-desc" class="text-slate-400 mt-1">同步中...</div>
-        </div>
-        <div id="weather-icon" class="text-8xl">☀️</div>
-        <div class="space-y-2 border-l border-white/10 pl-8">
+    <div class="col-span-7 row-span-2 glass px-10 flex items-center justify-between">
+        <div class="flex items-center gap-6">
+            <div id="weather-icon" class="text-7xl">☀️</div>
             <div>
-                <p class="text-[10px] text-slate-500 uppercase tracking-widest">降雨機率</p>
-                <p id="pop" class="text-2xl text-sky-400 font-bold">--%</p>
+                <p class="text-sky-400 text-sm tracking-widest">西屯區 青海路</p>
+                <div id="temp" class="text-7xl font-bold tracking-tighter">--°C</div>
             </div>
-            <div>
-                <p class="text-[10px] text-slate-500 uppercase tracking-widest">今日高低溫</p>
-                <p id="temp-range" class="text-xl text-slate-200">-- / --</p>
+        </div>
+        <div class="flex gap-10">
+            <div class="text-center">
+                <p class="text-[10px] text-slate-500 uppercase tracking-widest mb-1">降雨機率</p>
+                <p id="pop" class="text-3xl font-bold text-sky-400">--%</p>
+            </div>
+            <div class="text-center">
+                <p class="text-[10px] text-slate-500 uppercase tracking-widest mb-1">今日高低溫</p>
+                <p id="temp-range" class="text-2xl text-slate-300 font-light">-- / --</p>
             </div>
         </div>
     </div>
 
     <div class="col-span-7 row-span-3 glass p-8 overflow-hidden">
-        <div class="flex items-center gap-3 mb-4">
-            <div class="w-1.5 h-6 bg-red-600 rounded-full"></div>
-            <h2 class="text-xl font-bold text-white tracking-widest">即時焦點新聞</h2>
-        </div>
-        <div id="news-list" class="space-y-5">
-            <p class="text-slate-600">載入最新新聞...</p>
-        </div>
-    </div>
-
-    <div class="col-span-5 row-span-2 glass p-8">
-        <h2 class="text-lg font-bold text-slate-400 mb-4 tracking-widest uppercase">Family Bulletin</h2>
-        <div class="flex gap-6">
-            <div class="flex-1 bg-white/5 p-4 rounded-xl border-l-4 border-amber-500">
-                <p class="text-xs text-slate-500 mb-1">提示</p>
-                <p class="text-xl text-slate-200">出門記得帶傘</p>
-            </div>
-            <div class="flex-1 bg-white/5 p-4 rounded-xl border-l-4 border-blue-500">
-                <p class="text-xs text-slate-500 mb-1">晚上</p>
-                <p class="text-xl text-slate-200">垃圾車 19:30</p>
-            </div>
+        <h2 class="text-xs font-bold text-slate-500 mb-6 tracking-[0.3em] uppercase flex items-center gap-2">
+            <span class="w-1 h-4 bg-red-600 rounded-full"></span> News Headlines
+        </h2>
+        <div id="news-list" class="space-y-6">
+            <p class="text-slate-700 italic">正在獲取頭條新聞...</p>
         </div>
     </div>
 
-    <div class="col-span-3 row-span-2 glass p-4 flex flex-col">
-        <p class="text-xs text-slate-500 mb-2 flex justify-between">
-            <span>青海路影像</span>
-            <span class="text-red-500 animate-pulse">● LIVE</span>
-        </p>
-        <div class="flex-1 bg-black rounded-xl overflow-hidden relative">
+    <div class="col-span-3 row-span-2 glass p-8">
+        <h2 class="text-xs font-bold text-slate-500 mb-4 tracking-[0.3em] uppercase">Reminders</h2>
+        <div class="space-y-3">
+            <div class="flex items-center gap-3">
+                <div class="w-1.5 h-1.5 bg-amber-400 rounded-full"></div>
+                <p class="text-lg text-slate-200">出門記得帶雨傘</p>
+            </div>
+            <div class="flex items-center gap-3">
+                <div class="w-1.5 h-1.5 bg-sky-400 rounded-full"></div>
+                <p class="text-lg text-slate-200">19:30 垃圾車時間</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-span-4 row-span-2 glass p-4 flex flex-col relative">
+        <div class="flex justify-between items-center mb-2 px-1">
+            <span id="cam-label" class="text-[10px] text-slate-500 font-bold uppercase tracking-widest text-blue-400">CAM 1 / 7</span>
+            <div class="flex gap-1">
+                <div id="dot-1" class="w-1 h-1 bg-white rounded-full opacity-100"></div>
+                <div id="dot-2" class="w-1 h-1 bg-white rounded-full opacity-30"></div>
+                <div id="dot-3" class="w-1 h-1 bg-white rounded-full opacity-30"></div>
+            </div>
+        </div>
+        <div class="camera-container flex-1 rounded-2xl bg-black overflow-hidden relative shadow-inner">
             <iframe 
+                id="cam-frame"
                 src="https://tcnvr6.taichung.gov.tw/9db0d761" 
                 width="100%" height="100%" 
                 style="border:0;"
@@ -92,14 +104,25 @@
         </div>
     </div>
 
-    <div class="col-span-4 row-span-1 glass p-4 flex items-center justify-center">
-        <p class="text-slate-500 text-sm font-light">Smart Home Dashboard v2.0</p>
+    <div class="col-span-5 row-span-1 flex items-center justify-start px-10 text-[10px] text-slate-600 tracking-[0.5em] uppercase">
+        System Active • Xitun Dashboard v3.0
     </div>
 
     <script>
         const API_KEY = '71530563aac2b604c442ba03e2bf1bd4';
         const LAT = '24.1627'; 
         const LON = '120.6401';
+        
+        // 路況影像清單
+        const CAM_URLS = [
+            "https://tcnvr6.taichung.gov.tw/9db0d761",
+            "https://tcnvr5.taichung.gov.tw/ff2db7f1",
+            "https://tcnvr5.taichung.gov.tw/c9ec3cca",
+            "https://tcnvr5.taichung.gov.tw/ba31aa33",
+            "https://tcnvr5.taichung.gov.tw/98b4f534",
+            "https://tcnvr6.taichung.gov.tw/92cb8667"
+        ];
+        let currentCamIndex = 0;
 
         function updateTime() {
             const now = new Date();
@@ -107,8 +130,6 @@
             document.getElementById('date').innerText = now.toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric' });
             const lunarFormatter = new Intl.DateTimeFormat('zh-u-ca-chinese', {day:'numeric', month:'long'});
             document.getElementById('lunar').innerText = `農曆 ${lunarFormatter.format(now).replace(/年/, '')}`;
-            const weekdays = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-            document.getElementById('day').innerText = weekdays[now.getDay()];
         }
 
         async function fetchWeather() {
@@ -118,7 +139,6 @@
                 const current = data.list[0];
                 document.getElementById('temp').innerText = `${Math.round(current.main.temp)}°C`;
                 document.getElementById('pop').innerText = `${Math.round(current.pop * 100)}%`;
-                document.getElementById('weather-desc').innerText = current.weather[0].description;
                 const temps = data.list.slice(0, 8).map(i => i.main.temp);
                 document.getElementById('temp-range').innerText = `${Math.round(Math.min(...temps))}° / ${Math.round(Math.max(...temps))}°`;
                 const icons = { "Clear": "☀️", "Clouds": "☁️", "Rain": "🌧️", "Drizzle": "🌦️", "Thunderstorm": "⛈️" };
@@ -132,10 +152,23 @@
                 const data = await res.json();
                 document.getElementById('news-list').innerHTML = data.items.slice(0, 4).map(item => `
                     <div class="border-b border-white/5 pb-2">
-                        <div class="text-xl text-slate-200 font-light line-clamp-1">${item.title}</div>
+                        <div class="text-[10px] text-slate-500 font-mono mb-1 uppercase">${new Date(item.pubDate).toLocaleTimeString()}</div>
+                        <div class="text-2xl text-slate-200 font-light line-clamp-1">${item.title}</div>
                     </div>
                 `).join('');
             } catch (e) { console.error(e); }
+        }
+
+        // 輪播攝影機
+        function rotateCamera() {
+            currentCamIndex = (currentCamIndex + 1) % CAM_URLS.length;
+            const frame = document.getElementById('cam-frame');
+            frame.style.opacity = 0; // 淡出
+            setTimeout(() => {
+                frame.src = CAM_URLS[currentCamIndex];
+                document.getElementById('cam-label').innerText = `CAM ${currentCamIndex + 1} / ${CAM_URLS.length}`;
+                frame.style.opacity = 1; // 淡入
+            }, 500);
         }
 
         updateTime();
@@ -144,6 +177,11 @@
         setInterval(fetchWeather, 600000);
         fetchNews();
         setInterval(fetchNews, 900000);
+        
+        // 每 5 秒切換攝影機
+        setInterval(rotateCamera, 5000);
+
+        // 每小時全頁重整，防止記憶體洩漏與影像卡死
         setTimeout(() => location.reload(), 3600000);
     </script>
 </body>
