@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Surface Go Home Dashboard - Forecast</title>
+    <title>Surface Go Home Dashboard - Fixed Layout</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@100;300;400;700&display=swap" rel="stylesheet">
     <style>
@@ -38,8 +38,7 @@
             overflow: hidden; 
         }
         iframe { width: 100%; height: 100%; border: none; transition: opacity 0.5s ease; object-fit: contain; }
-        .aqi-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
-        .fade-content { transition: opacity 0.5s ease; }
+        .aqi-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; margin-right: 4px; }
     </style>
 </head>
 <body>
@@ -62,27 +61,28 @@
             </div>
         </div>
 
-        <div class="glass flex-row items-center justify-between px-10 gap-4">
-            <div class="flex items-center gap-8 w-[40%]">
-                <div class="text-center">
-                    <div id="weather-icon" class="text-7xl mb-1">☀️</div>
-                    <p class="text-slate-500 text-[10px] uppercase tracking-widest">Xitun District</p>
-                </div>
-                <div class="border-l border-white/10 pl-8">
-                    <div id="temp" class="text-6xl font-bold text-white tracking-tighter">--°C</div>
-                    <div class="flex items-center gap-3 mt-1 text-sky-400 text-sm font-medium">
-                        <span id="weather-desc">同步中...</span>
-                        <span id="rain-pop">🌧 --%</span>
+        <div class="glass flex-row items-center px-10 gap-10">
+            <div class="w-1/2 flex flex-col gap-4">
+                <div class="flex items-center gap-6">
+                    <div id="weather-icon" class="text-6xl">☀️</div>
+                    <div>
+                        <div class="flex items-baseline gap-2">
+                            <span id="temp" class="text-5xl font-bold tracking-tighter">--°C</span>
+                            <span id="weather-desc" class="text-sky-400 text-sm">同步中...</span>
+                        </div>
+                        <div class="flex items-center gap-3 text-[11px] text-slate-400 mt-1">
+                            <span id="rain-pop">🌧 --%</span>
+                            <span id="aqi-status" class="bg-white/5 px-2 py-0.5 rounded-full flex items-center">AQI: --</span>
+                        </div>
                     </div>
-                    <div class="mt-2 text-[11px] bg-white/5 rounded-full px-3 py-1 w-fit">
-                        <span id="aqi-status" class="flex items-center">AQI: --</span>
-                    </div>
                 </div>
+                <div id="forecast-row" class="flex justify-between border-t border-white/5 pt-3">
+                    </div>
             </div>
             
-            <div id="dynamic-display" class="border-l border-white/10 pl-8 w-[60%] h-[120px] flex flex-col justify-center overflow-hidden">
-                <div id="content-area" class="fade-content">
-                    </div>
+            <div class="w-1/2 border-l border-white/10 pl-10 h-[120px] flex flex-col justify-center">
+                <div id="horo-sign" class="text-amber-400 text-xs font-bold tracking-widest uppercase mb-2">Horoscope</div>
+                <div id="horo-text" class="text-slate-300 text-sm leading-relaxed line-clamp-3 transition-opacity duration-500">載入運勢中...</div>
             </div>
         </div>
 
@@ -106,8 +106,7 @@
             "https://tcnvr5.taichung.gov.tw/98b4f534", "https://tcnvr6.taichung.gov.tw/92cb8667"
         ];
         
-        let camIdx = 0, allNews = [], newsIdx = 0, horoIdx = 0, cycleIdx = 0;
-        let forecastData = [], horoDataCache = {};
+        let camIdx = 0, allNews = [], newsIdx = 0, horoIdx = 0;
         const horoSigns = ['sagittarius', 'capricorn'];
         const horoNames = { 'sagittarius': '射手座 ♐', 'capricorn': '摩羯座 ♑' };
         const weatherIcons = { "Clear": "☀️", "Clouds": "☁️", "Rain": "🌧️", "Drizzle": "🌦️", "Thunderstorm": "⛈️" };
@@ -122,6 +121,7 @@
 
         async function fetchEnvironment() {
             try {
+                // 1. 天氣
                 const wr = await fetch(`https://api.openweathermap.org/data/2.5/forecast?lat=${LAT}&lon=${LON}&units=metric&appid=${API_KEY}&lang=zh_tw`);
                 const wd = await wr.json();
                 const cur = wd.list[0];
@@ -130,17 +130,20 @@
                 document.getElementById('rain-pop').innerText = `🌧 ${Math.round(cur.pop * 100)}%`;
                 document.getElementById('weather-icon').innerText = weatherIcons[cur.weather[0].main] || "☀️";
 
-                // 整理未來 5 天預報
-                forecastData = [];
+                // 2. 一週預報渲染 (取每天中午的數據)
+                let forecastHtml = '';
                 for(let i=8; i<wd.list.length; i+=8) {
                     const day = wd.list[i];
-                    forecastData.push({
-                        date: new Date(day.dt * 1000).toLocaleDateString('zh-TW', {weekday: 'short'}),
-                        temp: Math.round(day.main.temp),
-                        icon: weatherIcons[day.weather[0].main] || "☀️"
-                    });
+                    forecastHtml += `
+                        <div class="text-center">
+                            <div class="text-[9px] text-slate-500">${new Date(day.dt * 1000).toLocaleDateString('zh-TW', {weekday: 'short'})}</div>
+                            <div class="text-lg my-0.5">${weatherIcons[day.weather[0].main] || "☀️"}</div>
+                            <div class="text-xs font-bold">${Math.round(day.main.temp)}°</div>
+                        </div>`;
                 }
+                document.getElementById('forecast-row').innerHTML = forecastHtml;
 
+                // 3. 空氣品質
                 const ar = await fetch(`https://api.openweathermap.org/data/2.5/air_pollution?lat=${LAT}&lon=${LON}&appid=${API_KEY}`);
                 const ad = await ar.json();
                 const aqi = ad.list[0].main.aqi;
@@ -149,44 +152,21 @@
             } catch (e) {}
         }
 
-        // 輪播內容切換器
-        async function switchDynamicDisplay() {
-            const area = document.getElementById('content-area');
-            area.style.opacity = 0;
-            
-            setTimeout(async () => {
-                if (cycleIdx === 0) { // 顯示星座運勢
-                    const sign = horoSigns[horoIdx];
-                    try {
-                        const resp = await fetch(`https://aztro.sameerkumar.website/?sign=${sign}&day=today`, { method: 'POST' });
-                        const data = await resp.json();
-                        const tUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=zh-TW&dt=t&q=${encodeURIComponent(data.description)}`;
-                        const tResp = await fetch(tUrl);
-                        const tData = await tResp.json();
-                        const chineseText = tData[0].map(item => item[0]).join('');
-                        
-                        area.innerHTML = `
-                            <div class="text-amber-400 text-xs font-bold tracking-widest uppercase mb-1">${horoNames[sign]}</div>
-                            <div class="text-slate-300 text-sm leading-relaxed line-clamp-3">${chineseText}</div>
-                        `;
-                        horoIdx = (horoIdx + 1) % horoSigns.length;
-                    } catch(e) { area.innerHTML = "運勢更新中..."; }
-                } else { // 顯示一週預報
-                    let forecastHtml = forecastData.map(d => `
-                        <div class="text-center">
-                            <div class="text-[10px] text-slate-500 mb-1">${d.date}</div>
-                            <div class="text-xl mb-1">${d.icon}</div>
-                            <div class="text-sm font-bold">${d.temp}°</div>
-                        </div>
-                    `).join('');
-                    area.innerHTML = `
-                        <div class="text-sky-400 text-[10px] font-bold tracking-widest uppercase mb-3">7-Day Forecast</div>
-                        <div class="flex justify-between items-center">${forecastHtml}</div>
-                    `;
-                }
-                area.style.opacity = 1;
-                cycleIdx = (cycleIdx + 1) % 2; // 在運勢與預報間切換
-            }, 500);
+        async function updateHoroscope() {
+            const sign = horoSigns[horoIdx], hText = document.getElementById('horo-text'), hSign = document.getElementById('horo-sign');
+            try {
+                const resp = await fetch(`https://aztro.sameerkumar.website/?sign=${sign}&day=today`, { method: 'POST' });
+                const data = await resp.json();
+                const tUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=zh-TW&dt=t&q=${encodeURIComponent(data.description)}`;
+                const tResp = await fetch(tUrl);
+                const tData = await tResp.json();
+                const chineseText = tData[0].map(item => item[0]).join('');
+                hText.style.opacity = 0;
+                setTimeout(() => {
+                    hSign.innerText = horoNames[sign]; hText.innerText = chineseText; hText.style.opacity = 1;
+                }, 500);
+            } catch (e) {}
+            horoIdx = (horoIdx + 1) % horoSigns.length;
         }
 
         async function fetchNews() {
@@ -216,11 +196,7 @@
         fetchEnvironment(); setInterval(fetchEnvironment, 600000);
         fetchNews(); setInterval(rotateNews, 10000);
         setInterval(fetchNews, 900000);
-        
-        // 初始並設定輪播 10 秒
-        switchDynamicDisplay(); 
-        setInterval(switchDynamicDisplay, 10000); 
-        
+        updateHoroscope(); setInterval(updateHoroscope, 10000);
         rotateCam(); setInterval(rotateCam, 10000);
         setTimeout(() => location.reload(), 3600000);
     </script>
