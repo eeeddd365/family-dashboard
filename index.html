@@ -3,85 +3,91 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Family Intelligence Dashboard</title>
+    <title>Family Intelligence Dashboard Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
         body {
-            background: radial-gradient(circle at top right, #1e293b 0%, #020617 100%);
+            background: radial-gradient(circle at top right, #0f172a 0%, #020617 100%);
             color: #f8fafc;
             font-family: 'Noto Sans TC', sans-serif;
             overflow: hidden;
             cursor: none;
         }
         .glass {
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(20px);
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(25px);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
         }
-        .text-neon { text-shadow: 0 0 10px rgba(56, 189, 248, 0.5); }
-        .news-item { border-left: 3px solid #38bdf8; transition: all 0.3s; }
-        .news-item:hover { background: rgba(56, 189, 248, 0.1); transform: translateX(5px); }
+        .text-neon { text-shadow: 0 0 15px rgba(56, 189, 248, 0.6); }
+        .weather-info { border-left: 2px solid rgba(56, 189, 248, 0.3); padding-left: 1rem; }
     </style>
 </head>
-<body class="h-screen w-screen p-10 grid grid-cols-12 grid-rows-6 gap-8">
+<body class="h-screen w-screen p-8 grid grid-cols-12 grid-rows-6 gap-6">
 
-    <div class="col-span-4 row-span-6 flex flex-col gap-8">
-        <div class="glass rounded-[3rem] p-10 flex-1 flex flex-col justify-center items-center text-center">
+    <div class="col-span-4 row-span-4 flex flex-col gap-6">
+        <div class="glass rounded-[2.5rem] p-10 flex-1 flex flex-col justify-center items-center text-center">
             <div id="clock" class="text-9xl font-light tracking-tighter text-white text-neon">00:00</div>
-            <div id="date" class="text-3xl text-slate-200 mt-6 font-medium">2026年2月1日</div>
-            <div id="lunar" class="text-2xl text-amber-200/80 mt-2 font-light italic">農曆 載入中...</div>
-            <div id="day" class="text-xl text-slate-400 mt-4 tracking-widest uppercase">Sunday</div>
+            <div id="date" class="text-3xl text-slate-200 mt-6 font-medium tracking-wide">2026年2月1日</div>
+            <div id="lunar" class="text-2xl text-amber-200/90 mt-2 font-light">農曆 載入中...</div>
+            <div id="day" class="text-xl text-slate-500 mt-4 tracking-[0.3em] uppercase">Sunday</div>
         </div>
 
-        <div class="glass rounded-[3rem] p-10 flex-1 flex flex-col justify-center">
+        <div class="glass rounded-[2.5rem] p-10 flex flex-col justify-center">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-slate-400 text-xl mb-1">西區, 台中市</p>
+                    <p class="text-slate-400 text-lg mb-1">台中市 西區</p>
                     <h2 id="temp" class="text-7xl font-bold text-white tracking-tighter">--°C</h2>
                 </div>
                 <div id="weather-icon" class="text-8xl">--</div>
             </div>
-            <div class="mt-6 flex gap-4 items-center">
-                <span id="weather-desc" class="px-4 py-1 bg-sky-500/20 text-sky-300 rounded-full text-lg font-medium tracking-wide">載入中...</span>
-                <span id="humidity" class="text-slate-400">濕度 --%</span>
+            <div class="mt-6 grid grid-cols-2 gap-4">
+                <div class="weather-info">
+                    <p class="text-xs text-slate-500 uppercase tracking-wider">今日預測</p>
+                    <p id="temp-range" class="text-xl text-slate-200">-- / --</p>
+                </div>
+                <div class="weather-info border-sky-500">
+                    <p class="text-xs text-slate-500 uppercase tracking-wider">降雨機率</p>
+                    <p id="pop" class="text-xl text-sky-400 font-bold">--%</p>
+                </div>
             </div>
+            <div id="weather-desc" class="mt-4 text-center py-2 bg-white/5 rounded-xl text-slate-300">正在同步氣象資料...</div>
         </div>
     </div>
 
-    <div class="col-span-8 row-span-3 glass rounded-[3rem] p-10 overflow-hidden">
-        <div class="flex justify-between items-end mb-8">
-            <h2 class="text-3xl font-bold tracking-tight text-white">即時焦點新聞</h2>
-            <span class="text-slate-500 font-mono">LIVE FEED / PTS NEWS</span>
+    <div class="col-span-8 row-span-3 glass rounded-[2.5rem] p-10 overflow-hidden">
+        <div class="flex justify-between items-end mb-6">
+            <h2 class="text-3xl font-bold text-white tracking-tight">即時焦點新聞</h2>
+            <span class="text-slate-500 font-mono text-sm animate-pulse tracking-widest">LIVE / PTS NEWS</span>
         </div>
         <div id="news-list" class="space-y-6">
-            <p class="text-slate-500 text-xl italic animate-pulse">正在連線至新聞中心...</p>
+            <p class="text-slate-600 italic">新聞頻道連線中...</p>
         </div>
     </div>
 
-    <div class="col-span-4 row-span-3 glass rounded-[3rem] p-10">
-        <h2 class="text-2xl font-bold text-white mb-6 flex items-center gap-3">
-            <span class="w-3 h-3 bg-emerald-500 rounded-full"></span> 區域路況
+    <div class="col-span-8 row-span-3 glass rounded-[2.5rem] p-8">
+        <h2 class="text-2xl font-bold text-white mb-4 flex items-center gap-3">
+            <span class="w-3 h-3 bg-red-500 rounded-full animate-ping"></span> 台中即時影像
         </h2>
-        <div class="w-full h-56 rounded-3xl bg-slate-900 overflow-hidden relative border border-slate-700">
+        <div class="w-full h-[320px] rounded-3xl bg-black overflow-hidden relative border border-white/5">
             <iframe 
-                src="https://www.google.com/maps/embed?pb=!1m14!1m12!1m3!1d29124.819717544062!2d120.66!3d24.15!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!5e0!3m2!1szh-TW!2stw!4v1700000000000!5m2!1szh-TW!2stw&layer=t" 
-                width="100%" height="100%" style="border:0; filter: contrast(1.2) brightness(0.8) invert(90%) hue-rotate(180deg) saturate(0.5);" allowfullscreen="" loading="lazy">
+                src="https://tcnvr6.taichung.gov.tw/9db0d761" 
+                width="100%" height="100%" style="border:0;" allowfullscreen>
             </iframe>
         </div>
     </div>
 
-    <div class="col-span-4 row-span-3 glass rounded-[3rem] p-10">
-        <h2 class="text-2xl font-bold text-white mb-6">📅 近期行程</h2>
-        <div class="space-y-5">
-            <div class="news-item pl-4 py-1">
-                <p class="text-sm text-sky-400 font-mono">18:30</p>
-                <p class="text-xl text-slate-200">全家晚餐聚會</p>
+    <div class="col-span-4 row-span-2 glass rounded-[2.5rem] p-8 flex flex-col justify-center">
+        <h2 class="text-xl font-bold text-white mb-4">📅 今日提醒</h2>
+        <div class="space-y-4">
+            <div class="border-l-2 border-amber-500 pl-4">
+                <p class="text-xs text-slate-500">19:00</p>
+                <p class="text-lg text-slate-200">垃圾車時間</p>
             </div>
-            <div class="news-item pl-4 py-1 border-purple-500">
-                <p class="text-sm text-purple-400 font-mono">明日 09:00</p>
-                <p class="text-xl text-slate-200">專案同步會議</p>
+            <div class="border-l-2 border-slate-700 pl-4">
+                <p class="text-xs text-slate-500">22:00</p>
+                <p class="text-lg text-slate-200">準備明日會議</p>
             </div>
         </div>
     </div>
@@ -90,65 +96,72 @@
         const API_KEY = '71530563aac2b604c442ba03e2bf1bd4';
         const CITY = 'Taichung';
 
-        // 1. 時間與農曆功能
+        // 1. 時間與農曆 (顯示初幾)
         function updateTime() {
             const now = new Date();
             document.getElementById('clock').innerText = now.toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit', hour12: false });
             document.getElementById('date').innerText = now.toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric' });
             
-            // 農曆轉換
-            const lunarStr = new Intl.DateTimeFormat('zh-TN-u-ca-chinese', {day:'numeric', month:'long'}).format(now);
-            document.getElementById('lunar').innerText = `農曆 ${lunarStr}`;
+            // 農曆顯示優化
+            const lunarOptions = { day: 'numeric', month: 'long' };
+            const lunarFormatter = new Intl.DateTimeFormat('zh-u-ca-chinese', lunarOptions);
+            const lunarDate = lunarFormatter.format(now);
+            // 格式化輸出：例如 "正月十五" 或 "六月初二"
+            document.getElementById('lunar').innerText = `農曆 ${lunarDate.replace(/年/, '')}`;
             
             const weekdays = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
             document.getElementById('day').innerText = weekdays[now.getDay()];
         }
 
-        // 2. 真實天氣 API 串接
+        // 2. 天氣 API (加入預測資料)
         async function fetchWeather() {
             try {
-                const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${CITY}&units=metric&appid=${API_KEY}&lang=zh_tw`);
-                const data = await res.json();
+                // 獲取當前天氣
+                const currentRes = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${CITY}&units=metric&appid=${API_KEY}&lang=zh_tw`);
+                const currentData = await currentRes.json();
                 
-                document.getElementById('temp').innerText = `${Math.round(data.main.temp)}°C`;
-                document.getElementById('weather-desc').innerText = data.weather[0].description;
-                document.getElementById('humidity').innerText = `濕度 ${data.main.humidity}%`;
+                // 獲取預報 (為了降雨機率 pop 與 高低溫)
+                const forecastRes = await fetch(`https://api.openweathermap.org/data/2.5/forecast?q=${CITY}&units=metric&appid=${API_KEY}&lang=zh_tw&cnt=8`);
+                const forecastData = await forecastRes.json();
                 
-                // 天氣圖示對照
-                const icons = {
-                    "Clear": "☀️", "Clouds": "☁️", "Rain": "🌧️", "Drizzle": "🌦️", "Thunderstorm": "⛈️", "Snow": "❄️", "Mist": "🌫️"
-                };
-                document.getElementById('weather-icon').innerText = icons[data.weather[0].main] || "☀️";
+                // 更新畫面
+                document.getElementById('temp').innerText = `${Math.round(currentData.main.temp)}°C`;
+                document.getElementById('weather-desc').innerText = `目前：${currentData.weather[0].description}`;
+                document.getElementById('pop').innerText = `${Math.round(forecastData.list[0].pop * 100)}%`;
+                
+                const minTemp = Math.round(currentData.main.temp_min);
+                const maxTemp = Math.round(currentData.main.temp_max);
+                document.getElementById('temp-range').innerText = `${minTemp}° / ${maxTemp}°`;
+                
+                const icons = { "Clear": "☀️", "Clouds": "☁️", "Rain": "🌧️", "Drizzle": "🌦️", "Thunderstorm": "⛈️", "Snow": "❄️", "Mist": "🌫️" };
+                document.getElementById('weather-icon').innerText = icons[currentData.weather[0].main] || "☀️";
             } catch (e) { console.error("Weather Error", e); }
         }
 
-        // 3. 新聞 API (RSS2JSON)
+        // 3. 新聞 API
         async function fetchNews() {
             const RSS_URL = 'https://news.pts.org.tw/xml/newsfeed.xml';
             try {
                 const res = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(RSS_URL)}`);
                 const data = await res.json();
                 const container = document.getElementById('news-list');
-                container.innerHTML = data.items.slice(0, 4).map(item => `
-                    <div class="news-item pl-6 py-2">
-                        <div class="text-xs text-slate-500 font-mono mb-1">${new Date(item.pubDate).toLocaleTimeString()}</div>
-                        <div class="text-2xl text-slate-200 font-light line-clamp-1">${item.title}</div>
+                container.innerHTML = data.items.slice(0, 3).map(item => `
+                    <div class="group border-b border-white/5 pb-4">
+                        <div class="text-[10px] text-sky-500 font-mono mb-1 uppercase">${new Date(item.pubDate).toLocaleTimeString()}</div>
+                        <div class="text-2xl text-slate-200 font-light group-hover:text-sky-400 transition-colors line-clamp-1">${item.title}</div>
                     </div>
                 `).join('');
             } catch (e) { console.error("News Error", e); }
         }
 
-        // 初始化與定時更新
         updateTime();
         setInterval(updateTime, 1000);
-        
         fetchWeather();
-        setInterval(fetchWeather, 600000); // 10分鐘更新天氣
-        
+        setInterval(fetchWeather, 600000);
         fetchNews();
-        setInterval(fetchNews, 900000); // 15分鐘更新新聞
-
-        // 每小時全頁重整，保持瀏覽器效能
+        setInterval(fetchNews, 900000);
+        
+        // 為了確保即時路況影像不會斷線，每小時重新整理
         setTimeout(() => location.reload(), 3600000);
     </script>
 </body>
