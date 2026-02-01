@@ -42,7 +42,7 @@
             <div id="news-list" class="space-y-6 min-h-[180px]"></div>
             <div class="mt-auto pt-6 flex justify-between items-center text-slate-400 border-t border-white/5">
                 <p id="lunar" class="text-sm italic font-light tracking-widest">農曆載入中...</p>
-                <span class="text-[9px] bg-red-500/20 text-red-400 px-3 py-1 rounded-full uppercase font-bold animate-pulse">Live Feed</span>
+                <span id="api-debug" class="text-[9px] bg-red-500/20 text-red-400 px-3 py-1 rounded-full uppercase font-bold">Bridge Off</span>
             </div>
         </div>
 
@@ -57,7 +57,7 @@
                         </div>
                         <div class="flex items-center gap-4 text-[12px] text-slate-400 mt-2 font-medium">
                             <span id="rain-pop" class="flex items-center gap-1">🌧 --%</span>
-                            <span id="aqi-status" class="bg-white/10 px-3 py-0.5 rounded-full text-white/80 border border-white/5">AQI: --</span>
+                            <span id="aqi-status" class="bg-white/10 px-3 py-0.5 rounded-full text-white/80">AQI: --</span>
                         </div>
                     </div>
                 </div>
@@ -82,7 +82,7 @@
 
     <script>
         const CWA_AUTH = 'CWB-211FFE24-164E-4464-A517-EEC3D50F45A6'; 
-        const BRIDGE_URL = 'http://127.0.0.1:5000';
+        const BRIDGE_URL = 'http://127.0.0.1:5000'; // 請確保 Python 視窗顯示為 127.0.0.1:5000
         const CAM_URLS = ["https://tcnvr6.taichung.gov.tw/9db0d761", "https://tcnvr5.taichung.gov.tw/ff2db7f1", "https://tcnvr5.taichung.gov.tw/c9ec3cca"];
         
         let camIdx = 0, horoIdx = 0, allNews = [], newsIdx = 0;
@@ -97,80 +97,63 @@
             document.getElementById('lunar').innerText = `農曆 ${lunar.replace(/年/, '')}`;
         }
 
+        // --- 天氣功能：直接呼叫 CWA 最穩定的一般預報 ---
         async function fetchWeather() {
             try {
-                const cwaUrl = `https://opendata.cwa.gov.tw/api/v1/rest/datastore/F-D0047-075?Authorization=${CWA_AUTH}&format=JSON&locationName=${encodeURIComponent('西屯區')}`;
-                const wr = await fetch(cwaUrl);
-                const wd = await wr.json();
+                // 抓取全臺預報，過濾臺中市
+                const r = await fetch(`https://opendata.cwa.gov.tw/api/v1/rest/datastore/F-C0032-001?Authorization=${CWA_AUTH}&format=JSON&locationName=${encodeURIComponent('臺中市')}`);
+                const d = await r.json();
+                const loc = d.records.location[0];
                 
-                if (!wd.records || !wd.records.locations) {
-                    console.error("CWA Data structure error");
-                    return;
-                }
+                const wx = loc.weatherElement.find(e => e.elementName === 'Wx').time[0].parameter.parameterName;
+                const pop = loc.weatherElement.find(e => e.elementName === 'PoP').time[0].parameter.parameterName;
+                const minT = loc.weatherElement.find(e => e.elementName === 'MinT').time[0].parameter.parameterName;
+                const maxT = loc.weatherElement.find(e => e.elementName === 'MaxT').time[0].parameter.parameterName;
 
-                const loc = wd.records.locations[0].location[0];
-                const elements = loc.weatherElement;
-
-                // 提取數據
-                const getVal = (name) => elements.find(e => e.elementName === name)?.time[0].elementValue[0].value || "--";
-                
-                const temp = getVal('T');
-                const pop = getVal('PoP6h');
-                const wx = getVal('Wx');
-                
-                document.getElementById('temp').innerText = `${temp}°C`;
+                document.getElementById('temp').innerText = `${Math.round((parseInt(minT)+parseInt(maxT))/2)}°C`;
                 document.getElementById('weather-desc').innerText = wx;
                 document.getElementById('rain-pop').innerText = `🌧 ${pop}%`;
-                document.getElementById('rain-pop').style.color = parseInt(pop) > 20 ? '#38bdf8' : '#94a3b8';
-
+                
                 const icons = { "晴": "☀️", "多雲": "☁️", "陰": "🌥️", "雨": "🌧️", "雷": "⛈️" };
                 const iconKey = Object.keys(icons).find(k => wx.includes(k)) || "☀️";
                 document.getElementById('weather-icon').innerText = icons[iconKey];
-
-                // 下方預報
-                let html = '';
-                const tEl = elements.find(e => e.elementName === 'T');
-                for(let i=1; i<5; i++) {
-                    const f = tEl.time[i];
-                    const fTime = new Date(f.startTime).getHours() + ":00";
-                    html += `<div class="text-center"><p class="text-[10px] text-slate-500 mb-1">${fTime}</p><p class="text-xl my-1">🌡️</p><p class="text-xs font-bold text-slate-300">${f.elementValue[0].value}°</p></div>`;
-                }
-                document.getElementById('forecast-row').innerHTML = html;
                 document.getElementById('aqi-status').innerText = `AQI: 良好`;
-
-            } catch (e) { 
-                console.error("CWA API Error:", e); 
-                document.getElementById('weather-desc').innerText = "連線失敗";
-            }
+            } catch (e) { console.error("Weather Error", e); }
         }
 
+        // --- 橋樑功能：偵錯 ERR_CONNECTION_REFUSED ---
         async function fetchBridge() {
+            const debugElem = document.getElementById('api-debug');
             try {
-                const r = await fetch(`${BRIDGE_URL}/api/status`);
+                const r = await fetch(`${BRIDGE_URL}/api/status`, { mode: 'cors' });
                 const data = await r.json();
                 document.getElementById('indoor-temp').innerText = data.temp;
                 document.getElementById('indoor-hum').innerText = data.hum;
                 document.getElementById('vacuum-status').innerText = data.vac_status;
-            } catch (e) { document.getElementById('vacuum-status').innerText = "Offline"; }
+                debugElem.innerText = "Bridge On";
+                debugElem.className = "text-[9px] bg-green-500/20 text-green-400 px-3 py-1 rounded-full uppercase font-bold";
+            } catch (e) { 
+                document.getElementById('vacuum-status').innerText = "Offline";
+                debugElem.innerText = "Bridge Off";
+                debugElem.className = "text-[9px] bg-red-500/20 text-red-400 px-3 py-1 rounded-full uppercase font-bold";
+            }
         }
 
         async function toggleVacuum() {
-            const status = document.getElementById('vacuum-status').innerText;
-            const action = (status === 'Cleaning' || status === '清掃中') ? 'stop' : 'start';
-            document.getElementById('vacuum-status').innerText = "Sending...";
             try {
+                const s = document.getElementById('vacuum-status').innerText;
+                const action = (s === 'Cleaning' || s === '清掃中') ? 'stop' : 'start';
                 await fetch(`${BRIDGE_URL}/api/vacuum/${action}`);
-                setTimeout(fetchBridge, 2000);
-            } catch (e) {}
+                setTimeout(fetchBridge, 1000);
+            } catch (e) { alert("無法連線至背景服務"); }
         }
 
         function updateHoroscope() {
+            const sign = horoSigns[horoIdx], hText = document.getElementById('horo-text');
             const fortunes = {
-                'sagittarius': "今日適合放慢腳步，處理擱置已久的家務。與人溝通時保持耐心，環境佈置能帶來好心情。",
-                'capricorn': "工作運勢穩步上揚，過去的努力正逐漸轉化為實質成果。保持專注，穩健的步伐將帶領你走向成功。"
+                'sagittarius': "今日適合放慢腳步，處理家務與整理思緒。環境佈置能帶來好心情。",
+                'capricorn': "工作運勢穩定，努力開始見效。保持專注與耐心，成果就在前方。"
             };
-            const sign = horoSigns[horoIdx];
-            const hText = document.getElementById('horo-text');
             hText.style.opacity = 0;
             setTimeout(() => {
                 document.getElementById('horo-sign').innerText = horoNames[sign];
