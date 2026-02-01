@@ -25,12 +25,12 @@
                 <p id="date" class="text-2xl text-slate-300 font-light tracking-widest">載入中...</p>
                 <div class="flex gap-10 mt-8 justify-center text-sm border-t border-white/5 pt-8">
                     <div class="flex flex-col items-center gap-1">
-                        <span class="text-sky-400 font-bold tracking-[0.2em] uppercase text-[10px]">Indoor Env</span>
-                        <span class="text-2xl font-light"><span id="indoor-temp">--</span>°<span class="text-slate-500 mx-1">/</span><span id="indoor-hum">--</span>%</span>
+                        <span class="text-sky-400 font-bold tracking-[0.2em] uppercase text-[10px]">Indoor</span>
+                        <span class="text-2xl font-light"><span id="indoor-temp">--</span>° / <span id="indoor-hum">--</span>%</span>
                     </div>
                     <div class="w-[1px] h-12 bg-white/10"></div>
                     <div class="flex flex-col items-center gap-1 cursor-pointer active:scale-95 transition" onclick="toggleVacuum()">
-                        <span class="text-amber-400 font-bold tracking-[0.2em] uppercase text-[10px]">Vacuum Bot 🧹</span>
+                        <span class="text-amber-400 font-bold tracking-[0.2em] uppercase text-[10px]">Vacuum 🧹</span>
                         <span id="vacuum-status" class="text-2xl font-light italic">Connecting...</span>
                     </div>
                 </div>
@@ -41,8 +41,8 @@
             <h2 class="text-[11px] font-bold text-slate-500 mb-6 tracking-[0.5em] uppercase border-b border-white/5 pb-2">Latest Flash News</h2>
             <div id="news-list" class="space-y-6 min-h-[180px]"></div>
             <div class="mt-auto pt-6 flex justify-between items-center text-slate-400 border-t border-white/5">
-                <p id="lunar" class="text-sm italic font-light tracking-widest">農曆載入中...</p>
-                <span id="api-debug" class="text-[9px] bg-slate-500/20 text-slate-400 px-3 py-1 rounded-full uppercase font-bold tracking-tighter">CWA API</span>
+                <p id="lunar" class="text-sm italic font-light tracking-widest">載入中...</p>
+                <span class="text-[9px] bg-sky-500/10 text-sky-400 px-3 py-1 rounded-full uppercase font-bold tracking-tighter tracking-widest">CWA Live</span>
             </div>
         </div>
 
@@ -57,7 +57,7 @@
                         </div>
                         <div class="flex items-center gap-4 text-[12px] text-slate-400 mt-2 font-medium">
                             <span id="rain-pop" class="flex items-center gap-1">🌧 --%</span>
-                            <span id="aqi-status" class="bg-white/10 px-3 py-0.5 rounded-full text-white/80">西屯區</span>
+                            <span class="bg-white/10 px-3 py-0.5 rounded-full text-white/80">西屯區</span>
                         </div>
                     </div>
                 </div>
@@ -66,7 +66,7 @@
 
             <div class="w-1/2 border-l border-white/10 pl-12 flex flex-col justify-center">
                 <div id="horo-sign" class="text-amber-400 text-xs font-black tracking-[0.4em] uppercase mb-4">Horoscope</div>
-                <div id="horo-text" class="text-slate-200 text-[16px] leading-[1.8] font-light tracking-wide text-justify transition-opacity duration-500">運勢更新中...</div>
+                <div id="horo-text" class="text-slate-200 text-[16px] leading-[1.8] font-light tracking-wide text-justify">運勢更新中...</div>
             </div>
         </div>
 
@@ -74,7 +74,7 @@
             <div class="camera-container h-full">
                 <iframe id="cam-player" src=""></iframe>
                 <div class="absolute top-4 left-4 z-10 text-[10px] font-bold text-white bg-black/40 backdrop-blur-md px-3 py-1 rounded-full tracking-widest border border-white/10 uppercase">
-                    Traffic Live Cam <span class="text-red-500 ml-1">●</span>
+                    Traffic Cam <span class="text-red-500 ml-1">●</span>
                 </div>
             </div>
         </div>
@@ -85,9 +85,7 @@
         const BRIDGE_URL = 'http://127.0.0.1:5000';
         const CAM_URLS = ["https://tcnvr6.taichung.gov.tw/9db0d761", "https://tcnvr5.taichung.gov.tw/ff2db7f1", "https://tcnvr5.taichung.gov.tw/c9ec3cca"];
         
-        let camIdx = 0, horoIdx = 0, allNews = [], newsIdx = 0;
-        const horoSigns = ['sagittarius', 'capricorn'];
-        const horoNames = { 'sagittarius': '射手座 ♐', 'capricorn': '摩羯座 ♑' };
+        let horoIdx = 0, allNews = [], camIdx = 0;
         const weatherIcons = { "晴": "☀️", "多雲": "☁️", "陰": "🌥️", "雨": "🌧️", "雷": "⛈️" };
 
         function updateClock() {
@@ -100,19 +98,19 @@
 
         async function fetchWeather() {
             try {
-                // 根據 F-D0047-075 規格抓取臺中市西屯區資料
-                const r = await fetch(`https://opendata.cwa.gov.tw/api/v1/rest/datastore/F-D0047-075?Authorization=${CWA_AUTH}&format=JSON&locationName=${encodeURIComponent('西屯區')}&elementName=Wx,T,PoP12h,MinT,MaxT`);
+                // 根據您提供的 cURL 結構進行 fetch
+                const url = `https://opendata.cwa.gov.tw/api/v1/rest/datastore/F-D0047-075?Authorization=${CWA_AUTH}&format=JSON&LocationName=${encodeURIComponent('西屯區')}`;
+                const r = await fetch(url);
                 const d = await r.json();
                 
-                if (!d.records.locations[0].location[0]) return;
                 const loc = d.records.locations[0].location[0];
                 const elements = loc.weatherElement;
 
-                // 當前氣溫與描述 (取 time[0])
+                // 1. 抓取主畫面資料
                 const wx = elements.find(e => e.elementName === 'Wx').time[0].elementValue[0].value;
                 const temp = elements.find(e => e.elementName === 'T').time[0].elementValue[0].value;
                 const pop = elements.find(e => e.elementName === 'PoP12h').time[0].elementValue[0].value;
-                
+
                 document.getElementById('temp').innerText = `${temp}°C`;
                 document.getElementById('weather-desc').innerText = wx;
                 document.getElementById('rain-pop').innerText = `🌧 ${pop}%`;
@@ -120,27 +118,32 @@
                 const iconKey = Object.keys(weatherIcons).find(k => wx.includes(k)) || "☀️";
                 document.getElementById('weather-icon').innerText = weatherIcons[iconKey];
 
-                // 渲染未來 7 天一週預報 (F-D0047-075 每 12 小時一筆，故 i+=2)
-                const weekWx = elements.find(e => e.elementName === 'Wx').time;
-                const weekMaxT = elements.find(e => e.elementName === 'MaxT').time;
+                // 2. 渲染 7 天預報
+                const maxTElem = elements.find(e => e.elementName === 'MaxT').time;
+                const wxElem = elements.find(e => e.elementName === 'Wx').time;
                 let html = '';
+                
+                // 每跳 2 格 (12小時) 是一天
                 for(let i=0; i<14; i+=2) {
-                    if(!weekWx[i]) break;
-                    const dateObj = new Date(weekWx[i].startTime);
-                    const dayName = dateObj.toLocaleDateString('zh-TW', {weekday: 'short'});
-                    const dWx = weekWx[i].elementValue[0].value;
-                    const dIcon = Object.keys(weatherIcons).find(k => dWx.includes(k)) || "☀️";
+                    if (!maxTElem[i]) break;
+                    const dateObj = new Date(maxTElem[i].startTime);
+                    const dayLabel = dateObj.toLocaleDateString('zh-TW', {weekday: 'short'});
+                    const dailyWx = wxElem[i].elementValue[0].value;
+                    const dailyIcon = Object.keys(weatherIcons).find(k => dailyWx.includes(k)) || "☀️";
                     
                     html += `
                         <div class="flex flex-col items-center">
-                            <span class="text-[9px] text-slate-500">${dayName}</span>
-                            <span class="text-sm my-1">${weatherIcons[dIcon]}</span>
-                            <span class="text-[10px] font-bold text-slate-300">${weekMaxT[i].elementValue[0].value}°</span>
+                            <span class="text-[9px] text-slate-500">${dayLabel}</span>
+                            <span class="text-sm my-1">${weatherIcons[dailyIcon]}</span>
+                            <span class="text-[10px] font-bold text-slate-300">${maxTElem[i].elementValue[0].value}°</span>
                         </div>`;
                 }
                 document.getElementById('forecast-row').innerHTML = html;
 
-            } catch (e) { console.error("CWA API Error:", e); }
+            } catch (e) {
+                console.error("CWA Error:", e);
+                document.getElementById('weather-desc').innerText = "API 錯誤";
+            }
         }
 
         async function fetchBridge() {
@@ -155,17 +158,20 @@
 
         function updateHoroscope() {
             const fortunes = {
-                'sagittarius': "今日適合沈澱心情。適合處理居家事務，環境佈置能帶來好運，也讓空間更有條理。",
-                'capricorn': "工作運勢穩定，過去的積累開始顯現價值。保持專注並避免焦慮，成果就在前方。"
+                'sagittarius': "今日適合處理居家事務。與家人溝通順暢，環境佈置能帶來好心情與正能量。",
+                'capricorn': "工作運勢穩定，過去的積累開始顯現價值。保持專注與耐心，成果就在前方。"
             };
-            const sign = horoSigns[horoIdx], hText = document.getElementById('horo-text');
+            const signs = ['sagittarius', 'capricorn'];
+            const names = { 'sagittarius': '射手座 ♐', 'capricorn': '摩羯座 ♑' };
+            const sign = signs[horoIdx];
+            const hText = document.getElementById('horo-text');
             hText.style.opacity = 0;
             setTimeout(() => {
-                document.getElementById('horo-sign').innerText = horoNames[sign];
+                document.getElementById('horo-sign').innerText = names[sign];
                 hText.innerText = fortunes[sign];
                 hText.style.opacity = 1;
             }, 500);
-            horoIdx = (horoIdx + 1) % horoSigns.length;
+            horoIdx = (horoIdx + 1) % signs.length;
         }
 
         async function fetchNews() { 
