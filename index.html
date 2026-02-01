@@ -3,145 +3,152 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Home Dashboard</title>
+    <title>Family Intelligence Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
         body {
-            background: radial-gradient(circle at center, #1a1a2e 0%, #0f0f1a 100%);
-            color: #e2e8f0;
+            background: radial-gradient(circle at top right, #1e293b 0%, #020617 100%);
+            color: #f8fafc;
             font-family: 'Noto Sans TC', sans-serif;
             overflow: hidden;
             cursor: none;
         }
         .glass {
             background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
+            backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
         }
-        .text-gradient {
-            background: linear-gradient(to right, #ffffff, #94a3b8);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        @keyframes pulse-soft {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.7; }
-        }
-        .updating { animation: pulse-soft 2s infinite; }
+        .text-neon { text-shadow: 0 0 10px rgba(56, 189, 248, 0.5); }
+        .news-item { border-left: 3px solid #38bdf8; transition: all 0.3s; }
+        .news-item:hover { background: rgba(56, 189, 248, 0.1); transform: translateX(5px); }
     </style>
 </head>
-<body class="h-screen w-screen p-8 grid grid-cols-12 grid-rows-6 gap-6">
+<body class="h-screen w-screen p-10 grid grid-cols-12 grid-rows-6 gap-8">
 
-    <div class="col-span-4 row-span-6 flex flex-col gap-6">
-        <div class="glass rounded-3xl p-8 flex-1 flex flex-col justify-center items-center">
-            <div id="clock" class="text-8xl font-light tracking-tighter text-white mb-2">00:00</div>
-            <div id="date" class="text-2xl text-blue-300 font-medium">2026年2月1日</div>
-            <div id="day" class="text-lg text-gray-400">星期日</div>
+    <div class="col-span-4 row-span-6 flex flex-col gap-8">
+        <div class="glass rounded-[3rem] p-10 flex-1 flex flex-col justify-center items-center text-center">
+            <div id="clock" class="text-9xl font-light tracking-tighter text-white text-neon">00:00</div>
+            <div id="date" class="text-3xl text-slate-200 mt-6 font-medium">2026年2月1日</div>
+            <div id="lunar" class="text-2xl text-amber-200/80 mt-2 font-light italic">農曆 載入中...</div>
+            <div id="day" class="text-xl text-slate-400 mt-4 tracking-widest uppercase">Sunday</div>
         </div>
-        <div class="glass rounded-3xl p-8 flex-1 flex flex-col justify-center">
+
+        <div class="glass rounded-[3rem] p-10 flex-1 flex flex-col justify-center">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-gray-400 text-lg">西區, 台中市</p>
-                    <h2 id="temp" class="text-6xl font-bold text-white mt-2">--°C</h2>
+                    <p class="text-slate-400 text-xl mb-1">西區, 台中市</p>
+                    <h2 id="temp" class="text-7xl font-bold text-white tracking-tighter">--°C</h2>
                 </div>
-                <div id="weather-icon" class="text-7xl">☀️</div>
+                <div id="weather-icon" class="text-8xl">--</div>
             </div>
-            <p id="weather-desc" class="text-xl text-blue-200 mt-4">正在獲取氣象資訊...</p>
+            <div class="mt-6 flex gap-4 items-center">
+                <span id="weather-desc" class="px-4 py-1 bg-sky-500/20 text-sky-300 rounded-full text-lg font-medium tracking-wide">載入中...</span>
+                <span id="humidity" class="text-slate-400">濕度 --%</span>
+            </div>
         </div>
     </div>
 
-    <div class="col-span-8 row-span-3 glass rounded-3xl p-8 overflow-hidden">
-        <div class="flex justify-between items-center mb-6">
-            <h2 class="text-2xl font-bold text-white flex items-center">
-                <span class="w-2 h-2 bg-red-500 rounded-full mr-3 animate-pulse"></span>
-                即時新聞頭條
-            </h2>
-            <span class="text-sm text-gray-400">來源：公視新聞</span>
+    <div class="col-span-8 row-span-3 glass rounded-[3rem] p-10 overflow-hidden">
+        <div class="flex justify-between items-end mb-8">
+            <h2 class="text-3xl font-bold tracking-tight text-white">即時焦點新聞</h2>
+            <span class="text-slate-500 font-mono">LIVE FEED / PTS NEWS</span>
         </div>
-        <div id="news-list" class="space-y-4">
-            <p class="text-gray-500 animate-pulse">正在更新最新訊息...</p>
+        <div id="news-list" class="space-y-6">
+            <p class="text-slate-500 text-xl italic animate-pulse">正在連線至新聞中心...</p>
         </div>
     </div>
 
-    <div class="col-span-4 row-span-3 glass rounded-3xl p-8">
-        <h2 class="text-xl font-bold text-white mb-4">🚗 交通路況</h2>
-        <div class="w-full h-48 rounded-xl bg-gray-800 flex items-center justify-center overflow-hidden">
+    <div class="col-span-4 row-span-3 glass rounded-[3rem] p-10">
+        <h2 class="text-2xl font-bold text-white mb-6 flex items-center gap-3">
+            <span class="w-3 h-3 bg-emerald-500 rounded-full"></span> 區域路況
+        </h2>
+        <div class="w-full h-56 rounded-3xl bg-slate-900 overflow-hidden relative border border-slate-700">
             <iframe 
-                src="https://www.google.com/maps/embed?pb=!1m14!1m12!1m3!1d58252.16399002!2d120.6486!3d24.1477!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!5e0!3m2!1szh-TW!2stw!4v1700000000000!5m2!1szh-TW!2stw&layer=t" 
-                width="100%" height="100%" style="border:0; filter: invert(90%) hue-rotate(180deg);" allowfullscreen="" loading="lazy">
+                src="https://www.google.com/maps/embed?pb=!1m14!1m12!1m3!1d29124.819717544062!2d120.66!3d24.15!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!5e0!3m2!1szh-TW!2stw!4v1700000000000!5m2!1szh-TW!2stw&layer=t" 
+                width="100%" height="100%" style="border:0; filter: contrast(1.2) brightness(0.8) invert(90%) hue-rotate(180deg) saturate(0.5);" allowfullscreen="" loading="lazy">
             </iframe>
         </div>
-        <p class="text-xs text-gray-500 mt-2 text-center">地圖已套用深色濾鏡以符合視覺</p>
     </div>
 
-    <div class="col-span-4 row-span-3 glass rounded-3xl p-8">
-        <h2 class="text-xl font-bold text-white mb-4">📅 近期行程</h2>
-        <div class="space-y-3">
-            <div class="flex items-start gap-3">
-                <div class="w-1 h-10 bg-blue-500 rounded-full"></div>
-                <div>
-                    <p class="text-sm text-gray-400">18:30</p>
-                    <p class="text-white">家庭晚餐</p>
-                </div>
+    <div class="col-span-4 row-span-3 glass rounded-[3rem] p-10">
+        <h2 class="text-2xl font-bold text-white mb-6">📅 近期行程</h2>
+        <div class="space-y-5">
+            <div class="news-item pl-4 py-1">
+                <p class="text-sm text-sky-400 font-mono">18:30</p>
+                <p class="text-xl text-slate-200">全家晚餐聚會</p>
             </div>
-            <div class="flex items-start gap-3">
-                <div class="w-1 h-10 bg-purple-500 rounded-full"></div>
-                <div>
-                    <p class="text-sm text-gray-400">明日 09:00</p>
-                    <p class="text-white">專案會議</p>
-                </div>
+            <div class="news-item pl-4 py-1 border-purple-500">
+                <p class="text-sm text-purple-400 font-mono">明日 09:00</p>
+                <p class="text-xl text-slate-200">專案同步會議</p>
             </div>
         </div>
     </div>
 
     <script>
-        // 1. 更新時間
+        const API_KEY = '71530563aac2b604c442ba03e2bf1bd4';
+        const CITY = 'Taichung';
+
+        // 1. 時間與農曆功能
         function updateTime() {
             const now = new Date();
             document.getElementById('clock').innerText = now.toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit', hour12: false });
             document.getElementById('date').innerText = now.toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric' });
-            const weekdays = ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"];
+            
+            // 農曆轉換
+            const lunarStr = new Intl.DateTimeFormat('zh-TN-u-ca-chinese', {day:'numeric', month:'long'}).format(now);
+            document.getElementById('lunar').innerText = `農曆 ${lunarStr}`;
+            
+            const weekdays = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
             document.getElementById('day').innerText = weekdays[now.getDay()];
         }
-        setInterval(updateTime, 1000);
-        updateTime();
 
-        // 2. 獲取新聞 (使用 RSS2JSON API)
+        // 2. 真實天氣 API 串接
+        async function fetchWeather() {
+            try {
+                const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${CITY}&units=metric&appid=${API_KEY}&lang=zh_tw`);
+                const data = await res.json();
+                
+                document.getElementById('temp').innerText = `${Math.round(data.main.temp)}°C`;
+                document.getElementById('weather-desc').innerText = data.weather[0].description;
+                document.getElementById('humidity').innerText = `濕度 ${data.main.humidity}%`;
+                
+                // 天氣圖示對照
+                const icons = {
+                    "Clear": "☀️", "Clouds": "☁️", "Rain": "🌧️", "Drizzle": "🌦️", "Thunderstorm": "⛈️", "Snow": "❄️", "Mist": "🌫️"
+                };
+                document.getElementById('weather-icon').innerText = icons[data.weather[0].main] || "☀️";
+            } catch (e) { console.error("Weather Error", e); }
+        }
+
+        // 3. 新聞 API (RSS2JSON)
         async function fetchNews() {
             const RSS_URL = 'https://news.pts.org.tw/xml/newsfeed.xml';
-            const API_URL = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(RSS_URL)}`;
-            
             try {
-                const response = await fetch(API_URL);
-                const data = await response.json();
-                const newsList = document.getElementById('news-list');
-                newsList.innerHTML = data.items.slice(0, 4).map(item => `
-                    <div class="border-b border-white/5 pb-3">
-                        <a href="${item.link}" target="_blank" class="text-lg text-gray-200 hover:text-blue-400 transition-colors line-clamp-1">
-                            ${item.title}
-                        </a>
-                        <p class="text-xs text-gray-500 mt-1">${new Date(item.pubDate).toLocaleTimeString()}</p>
+                const res = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(RSS_URL)}`);
+                const data = await res.json();
+                const container = document.getElementById('news-list');
+                container.innerHTML = data.items.slice(0, 4).map(item => `
+                    <div class="news-item pl-6 py-2">
+                        <div class="text-xs text-slate-500 font-mono mb-1">${new Date(item.pubDate).toLocaleTimeString()}</div>
+                        <div class="text-2xl text-slate-200 font-light line-clamp-1">${item.title}</div>
                     </div>
                 `).join('');
-            } catch (error) {
-                console.error('新聞載入失敗', error);
-            }
+            } catch (e) { console.error("News Error", e); }
         }
+
+        // 初始化與定時更新
+        updateTime();
+        setInterval(updateTime, 1000);
+        
+        fetchWeather();
+        setInterval(fetchWeather, 600000); // 10分鐘更新天氣
+        
         fetchNews();
-        setInterval(fetchNews, 600000); // 每 10 分鐘更新一次新聞
+        setInterval(fetchNews, 900000); // 15分鐘更新新聞
 
-        // 3. 模擬天氣更新 (可換成 OpenWeatherMap API)
-        function updateWeather() {
-            const temps = ["21°C", "22°C", "20°C"];
-            document.getElementById('temp').innerText = temps[Math.floor(Math.random() * temps.length)];
-            document.getElementById('weather-desc').innerText = "多雲時晴，舒適";
-        }
-        updateWeather();
-
-        // 頁面每 1 小時全頁重新整理，防止瀏覽器記憶體洩漏
+        // 每小時全頁重整，保持瀏覽器效能
         setTimeout(() => location.reload(), 3600000);
     </script>
 </body>
