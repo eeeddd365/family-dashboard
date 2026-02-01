@@ -12,8 +12,10 @@
         .dashboard-grid { display: grid; grid-template-columns: 1fr 1.1fr; grid-template-rows: 1.6fr 1fr; gap: 1.5rem; height: 100vh; padding: 1.5rem; }
         .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(25px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 2.5rem; display: flex; flex-direction: column; justify-content: center; }
         .text-neon { text-shadow: 0 0 25px rgba(56, 189, 248, 0.6); }
-        .camera-container { aspect-ratio: 16 / 9; width: 100%; background: #000; border-radius: 1.5rem; overflow: hidden; }
+        .camera-container { aspect-ratio: 16 / 9; width: 100%; background: #000; border-radius: 1.5rem; overflow: hidden; position: relative; }
         iframe { width: 100%; height: 100%; border: none; transition: opacity 0.8s ease; }
+        .fade-in { animation: fadeIn 0.8s ease forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
@@ -38,11 +40,14 @@
         </div>
 
         <div class="glass p-10 justify-start">
-            <h2 class="text-[11px] font-bold text-slate-500 mb-6 tracking-[0.5em] uppercase border-b border-white/5 pb-2">Latest Flash News</h2>
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-[11px] font-bold text-slate-500 tracking-[0.5em] uppercase">Live News Feed</h2>
+                <span id="news-source" class="text-[9px] text-sky-400 border border-sky-400/30 px-2 py-0.5 rounded italic">Loading...</span>
+            </div>
             <div id="news-list" class="space-y-6 min-h-[180px]"></div>
             <div class="mt-auto pt-6 flex justify-between items-center text-slate-400 border-t border-white/5">
-                <p id="lunar" class="text-sm italic font-light tracking-widest">農曆載入中...</p>
-                <span class="text-[9px] bg-red-500/20 text-red-400 px-3 py-1 rounded-full uppercase font-bold animate-pulse">Live Feed</span>
+                <p id="lunar" class="text-sm italic font-light tracking-widest">載入中...</p>
+                <span class="text-[9px] bg-red-500/20 text-red-400 px-3 py-1 rounded-full uppercase font-bold animate-pulse">Update Instant</span>
             </div>
         </div>
 
@@ -55,8 +60,8 @@
                             <span id="temp" class="text-6xl font-bold tracking-tighter">--°C</span>
                             <span id="weather-desc" class="text-sky-400 text-xs font-black uppercase tracking-[0.2em]">Clear</span>
                         </div>
-                        <div class="flex items-center gap-4 text-[12px] text-slate-400 mt-2 font-medium">
-                            <span id="rain-pop" class="flex items-center gap-1">🌧 --%</span>
+                        <div class="flex items-center gap-4 text-[12px] text-slate-400 mt-2">
+                            <span id="rain-pop">🌧 --%</span>
                             <span id="aqi-status" class="bg-white/10 px-3 py-0.5 rounded-full text-white/80">AQI: --</span>
                         </div>
                     </div>
@@ -66,7 +71,7 @@
 
             <div class="w-1/2 border-l border-white/10 pl-12 flex flex-col justify-center">
                 <div id="horo-sign" class="text-amber-400 text-xs font-black tracking-[0.4em] uppercase mb-4">Horoscope</div>
-                <div id="horo-text" class="text-slate-200 text-[16px] leading-[1.8] font-light tracking-wide text-justify transition-opacity duration-500">運勢載入中...</div>
+                <div id="horo-text" class="text-slate-200 text-[16px] leading-[1.8] font-light tracking-wide text-justify">載入中...</div>
             </div>
         </div>
 
@@ -74,7 +79,7 @@
             <div class="camera-container h-full">
                 <iframe id="cam-player" src=""></iframe>
                 <div class="absolute top-4 left-4 z-10 text-[10px] font-bold text-white bg-black/40 backdrop-blur-md px-3 py-1 rounded-full tracking-widest border border-white/10 uppercase">
-                    Traffic Live <span class="text-red-500 ml-1">●</span>
+                    Taichung Traffic <span class="text-red-500 ml-1">●</span>
                 </div>
             </div>
         </div>
@@ -82,13 +87,15 @@
 
     <script>
         const API_KEY = '71530563aac2b604c442ba03e2bf1bd4';
-        const LAT = '24.1627', LON = '120.6401';
         const BRIDGE_URL = 'http://127.0.0.1:5000';
+        const RSS_SOURCES = [
+            { name: "公視新聞", url: "https://news.pts.org.tw/xml/newsfeed.xml" },
+            { name: "UDN 即時", url: "https://udn.com/rssfeed/news/2/6638?ch=news" },
+            { name: "科技新報", url: "https://technews.tw/feed/" }
+        ];
         const CAM_URLS = ["https://tcnvr6.taichung.gov.tw/9db0d761", "https://tcnvr5.taichung.gov.tw/ff2db7f1", "https://tcnvr5.taichung.gov.tw/c9ec3cca"];
         
         let camIdx = 0, horoIdx = 0, allNews = [], newsIdx = 0;
-        const horoSigns = ['sagittarius', 'capricorn'];
-        const horoNames = { 'sagittarius': '射手座 ♐', 'capricorn': '摩羯座 ♑' };
 
         function updateClock() {
             const n = new Date();
@@ -108,27 +115,14 @@
             } catch (e) { document.getElementById('vacuum-status').innerText = "Offline"; }
         }
 
-        async function toggleVacuum() {
-            document.getElementById('vacuum-status').innerText = "Sending...";
-            try {
-                const s = document.getElementById('vacuum-status').innerText;
-                const action = (s === 'Cleaning' || s === '清掃中') ? 'stop' : 'start';
-                await fetch(`${BRIDGE_URL}/api/vacuum/${action}`);
-                setTimeout(fetchBridge, 2000);
-            } catch (e) {}
-        }
-
         async function fetchWeather() {
             try {
-                // 1. 天氣預報
-                const wr = await fetch(`https://api.openweathermap.org/data/2.5/forecast?lat=${LAT}&lon=${LON}&units=metric&appid=${API_KEY}&lang=zh_tw`);
+                const wr = await fetch(`https://api.openweathermap.org/data/2.5/forecast?lat=24.1627&lon=120.6401&units=metric&appid=${API_KEY}&lang=zh_tw`);
                 const wd = await wr.json();
                 const cur = wd.list[0];
                 document.getElementById('temp').innerText = `${Math.round(cur.main.temp)}°C`;
                 document.getElementById('weather-desc').innerText = cur.weather[0].description.toUpperCase();
-                // 修正降雨機率顯示
                 document.getElementById('rain-pop').innerText = `🌧 ${Math.round(cur.pop * 100)}%`;
-                
                 const icons = { "Clear": "☀️", "Clouds": "☁️", "Rain": "🌧️", "Drizzle": "🌦️", "Thunderstorm": "⛈️" };
                 document.getElementById('weather-icon').innerText = icons[cur.weather[0].main] || "☀️";
 
@@ -139,27 +133,49 @@
                 }
                 document.getElementById('forecast-row').innerHTML = html;
 
-                // 2. 空氣品質 (AQI)
-                const ar = await fetch(`https://api.openweathermap.org/data/2.5/air_pollution?lat=${LAT}&lon=${LON}&appid=${API_KEY}`);
+                const ar = await fetch(`https://api.openweathermap.org/data/2.5/air_pollution?lat=24.1627&lon=120.6401&appid=${API_KEY}`);
                 const ad = await ar.json();
-                const aqi = ad.list[0].main.aqi;
                 const aqiMap = ["-", "良好", "普通", "輕度", "中度", "嚴重"];
-                document.getElementById('aqi-status').innerText = `AQI: ${aqiMap[aqi] || "普通"}`;
+                document.getElementById('aqi-status').innerText = `AQI: ${aqiMap[ad.list[0].main.aqi]}`;
             } catch (e) {}
         }
 
+        async function fetchNews() {
+            let combinedNews = [];
+            for (let source of RSS_SOURCES) {
+                try {
+                    const r = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(source.url)}`);
+                    const d = await r.json();
+                    const items = d.items.map(item => ({...item, sourceName: source.name}));
+                    combinedNews = [...combinedNews, ...items];
+                } catch (e) {}
+            }
+            // 打亂新聞順序
+            allNews = combinedNews.sort(() => Math.random() - 0.5);
+            rotateNews();
+        }
+
+        function rotateNews() {
+            if(!allNews.length) return;
+            const list = allNews.slice(newsIdx, newsIdx + 3);
+            const container = document.getElementById('news-list');
+            container.innerHTML = list.map(i => `<div class="border-b border-white/5 pb-3 fade-in"><p class="text-xl text-slate-100 font-light line-clamp-1 tracking-wide">${i.title}</p></div>`).join('');
+            document.getElementById('news-source').innerText = list[0].sourceName;
+            newsIdx = (newsIdx + 3) >= allNews.length ? 0 : newsIdx + 3;
+        }
+
         function updateHoroscope() {
-            const sign = horoSigns[horoIdx], hText = document.getElementById('horo-text'), hSign = document.getElementById('horo-sign');
             const fortunes = {
-                'sagittarius': "今日適合放慢腳步，處理擱置已久的家務。與人溝通時保持耐心，會發現意想不到的幫助，環境佈置能帶來好心情。",
-                'capricorn': "工作運勢穩步上揚，過去的努力正逐漸轉化為實質成果。保持專注並避免過度焦慮，穩健的步伐將帶領你走向成功。"
+                'sagittarius': "今天適合處理居家事務，與家人溝通順暢。環境佈置能帶來好心情，也是沈澱思緒的好時機。",
+                'capricorn': "工作運勢穩步上揚，過去的努力正逐漸轉化為實質成果。保持專注並避免過度焦慮，成果就在前方。"
             };
-            hText.style.opacity = 0;
-            setTimeout(() => {
-                hSign.innerText = horoNames[sign];
-                hText.innerText = fortunes[sign];
-                hText.style.opacity = 1;
-            }, 500);
+            const sign = horoSigns[horoIdx];
+            const hText = document.getElementById('horo-text');
+            hText.classList.remove('fade-in');
+            void hText.offsetWidth; // 觸發重繪以重啟動畫
+            document.getElementById('horo-sign').innerText = horoNames[sign];
+            hText.innerText = fortunes[sign];
+            hText.classList.add('fade-in');
             horoIdx = (horoIdx + 1) % horoSigns.length;
         }
 
@@ -169,23 +185,10 @@
             setTimeout(() => { p.src = CAM_URLS[camIdx]; camIdx = (camIdx + 1) % CAM_URLS.length; p.style.opacity = '1'; }, 800);
         }
 
-        async function fetchNews() { 
-            try { 
-                const r = await fetch('https://api.rss2json.com/v1/api.json?rss_url=https://news.pts.org.tw/xml/newsfeed.xml'); 
-                const d = await r.json(); allNews = d.items; rotateNews(); 
-            } catch(e){} 
-        }
-
-        function rotateNews() { 
-            if(!allNews.length) return; 
-            const list = allNews.slice(newsIdx, newsIdx+3); 
-            document.getElementById('news-list').innerHTML = list.map(i => `<div class="border-b border-white/5 pb-3"><p class="text-xl text-slate-100 font-light line-clamp-1 tracking-wide">${i.title}</p></div>`).join(''); 
-            newsIdx = (newsIdx+3) % (Math.max(allNews.length-3, 1)); 
-        }
-
         updateClock(); setInterval(updateClock, 1000);
         fetchWeather(); setInterval(fetchWeather, 600000);
-        fetchNews(); setInterval(rotateNews, 8000); // 縮短為 8 秒更新一次新聞
+        fetchNews(); setInterval(fetchNews, 300000); // 每5分鐘重新抓一次新聞源
+        setInterval(rotateNews, 6000); // 6秒換一次新聞
         updateHoroscope(); setInterval(updateHoroscope, 10000);
         rotateCam(); setInterval(rotateCam, 20000);
         fetchBridge(); setInterval(fetchBridge, 3000);
