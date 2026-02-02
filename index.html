@@ -3,88 +3,106 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Surface Home Dashboard - Optimized</title>
+    <title>Surface Home Dashboard - Fixed</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@100;300;400;700&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body, html { width: 100%; height: 100%; overflow: hidden; background: #020617; color: #f1f5f9; font-family: 'Noto Sans TC', sans-serif; }
-        .dashboard-grid { display: grid; grid-template-columns: 1fr 1.1fr; grid-template-rows: 1.6fr 1fr; gap: 1.5rem; height: 100vh; padding: 1.5rem; }
-        .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(25px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 2.5rem; display: flex; flex-direction: column; justify-content: center; }
+        body, html { 
+            width: 100%; height: 100%; overflow: hidden; 
+            background: #020617; color: #f1f5f9; 
+            font-family: 'Noto Sans TC', sans-serif; 
+        }
+        .dashboard-grid { 
+            display: grid; 
+            grid-template-columns: 1fr 1.1fr; 
+            grid-template-rows: 1.6fr 1fr; 
+            gap: 1.5rem; 
+            height: 100vh; 
+            padding: 1.5rem;
+            max-height: 100vh;
+        }
+        .glass { 
+            background: rgba(255, 255, 255, 0.03); 
+            backdrop-filter: blur(25px); 
+            border: 1px solid rgba(255, 255, 255, 0.1); 
+            border-radius: 2.5rem; 
+            display: flex; 
+            flex-direction: column;
+            overflow: hidden;
+        }
         .text-neon { text-shadow: 0 0 25px rgba(56, 189, 248, 0.6); }
-        .camera-container { aspect-ratio: 16 / 9; width: 100%; background: #000; border-radius: 1.5rem; overflow: hidden; }
+        .camera-container { width: 100%; height: 100%; background: #000; border-radius: 1.5rem; overflow: hidden; position: relative; }
         iframe { width: 100%; height: 100%; border: none; transition: opacity 0.8s ease; }
     </style>
 </head>
 <body>
 
     <div class="dashboard-grid">
-        <div class="glass items-center text-center">
-            <div id="clock" class="text-[10rem] font-thin leading-none text-neon tracking-tighter">00:00</div>
-            <div class="mt-2 text-2xl text-slate-300 font-light tracking-widest" id="date">載入中...</div>
-            <div class="flex gap-10 mt-8 justify-center text-sm border-t border-white/5 pt-8 w-4/5 mx-auto">
+        <div class="glass items-center justify-center text-center p-6">
+            <div id="clock" class="text-[9rem] font-thin leading-none text-neon tracking-tighter">00:00</div>
+            <div class="mt-2 text-2xl text-slate-300 font-light tracking-[0.3em]" id="date">載入中...</div>
+            <div class="flex gap-12 mt-10 justify-center border-t border-white/5 pt-10 w-full">
                 <div class="flex flex-col items-center gap-1">
                     <span class="text-sky-400 font-bold tracking-[0.2em] uppercase text-[10px]">Indoor Env</span>
-                    <span class="text-2xl font-light"><span id="indoor-temp">--</span>° / <span id="indoor-hum">--</span>%</span>
+                    <span class="text-3xl font-light"><span id="indoor-temp">--</span>° <span class="text-white/10">/</span> <span id="indoor-hum">--</span>%</span>
                 </div>
                 <div class="w-[1px] h-12 bg-white/10"></div>
                 <div class="flex flex-col items-center gap-1 cursor-pointer active:scale-95 transition" onclick="toggleVacuum()">
                     <span class="text-amber-400 font-bold tracking-[0.2em] uppercase text-[10px]">Vacuum Bot 🧹</span>
-                    <span id="vacuum-status" class="text-2xl font-light italic">Connecting...</span>
+                    <span id="vacuum-status" class="text-2xl font-light italic text-slate-200">Connecting...</span>
                 </div>
             </div>
         </div>
 
         <div class="glass p-10 justify-start">
             <h2 class="text-[11px] font-bold text-slate-500 mb-6 tracking-[0.5em] uppercase border-b border-white/5 pb-2">Latest Flash News</h2>
-            <div id="news-list" class="space-y-6 min-h-[180px]"></div>
-            <div class="mt-auto pt-6 flex justify-between items-center text-slate-400 border-t border-white/5">
+            <div id="news-list" class="space-y-6 flex-1 overflow-hidden"></div>
+            <div class="mt-6 pt-6 flex justify-between items-center text-slate-400 border-t border-white/5">
                 <p id="lunar" class="text-sm italic font-light tracking-widest">農曆載入中...</p>
                 <span class="text-[9px] bg-sky-500/10 text-sky-400 px-3 py-1 rounded-full uppercase font-bold tracking-widest">Live Feed</span>
             </div>
         </div>
 
-        <div class="glass flex-row items-center px-10 gap-0">
-            <div class="w-[62%] pr-10 border-r border-white/5 h-[80%] flex flex-col justify-between">
+        <div class="glass flex-row items-center px-10">
+            <div class="w-[65%] h-[85%] border-r border-white/10 pr-10 flex flex-col justify-between">
                 <div class="flex items-center gap-8">
-                    <div id="weather-icon" class="text-[7rem] shrink-0 leading-none">☀️</div>
+                    <div id="weather-icon" class="text-[6.5rem] shrink-0 leading-none">☀️</div>
                     <div class="min-w-0 flex-1">
                         <div class="flex items-baseline gap-4">
-                            <span id="temp" class="text-7xl font-bold tracking-tighter text-white">--°C</span>
-                            <span id="weather-desc" class="text-sky-400 text-xl font-bold uppercase tracking-widest truncate">載入中</span>
+                            <span id="temp" class="text-7xl font-bold tracking-tighter">--°C</span>
+                            <span id="weather-desc" class="text-sky-400 text-lg font-bold uppercase tracking-widest truncate">載入中</span>
                         </div>
-                        
-                        <div class="flex justify-between items-center mt-6 pr-4">
+                        <div class="flex justify-between mt-5 pr-2">
                             <div class="flex flex-col">
-                                <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Precip</span>
+                                <span class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Precip</span>
                                 <span id="rain-pop" class="text-lg font-light">🌧 --%</span>
                             </div>
                             <div class="flex flex-col">
-                                <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Feels Like</span>
+                                <span class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Feels</span>
                                 <span class="text-lg font-light text-amber-400"><span id="feels-like">--</span>°</span>
                             </div>
                             <div class="flex flex-col">
-                                <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Humidity</span>
+                                <span class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Humidity</span>
                                 <span class="text-lg font-light text-sky-300"><span id="humidity">--</span>%</span>
                             </div>
                         </div>
-                        <div id="aqi-status" class="inline-block mt-4 bg-white/5 px-4 py-1 rounded-full text-[11px] text-white/70 border border-white/10 tracking-widest uppercase font-bold">AQI: --</div>
                     </div>
                 </div>
-                
-                <div id="forecast-row" class="grid grid-cols-3 gap-4 border-t border-white/5 pt-6 text-center"></div>
+                <div id="forecast-row" class="grid grid-cols-3 gap-4 border-t border-white/5 pt-5 text-center"></div>
             </div>
 
-            <div class="w-[38%] pl-10 flex flex-col justify-center">
-                <div id="horo-sign" class="text-amber-400 text-[11px] font-black tracking-[0.4em] uppercase mb-4 opacity-80">Horoscope</div>
-                <div id="horo-text" class="text-slate-200 text-[17px] leading-[1.8] font-light tracking-wide text-justify transition-opacity duration-500 line-clamp-4 italic">運勢更新中...</div>
+            <div class="w-[35%] pl-10 h-[85%] flex flex-col justify-center">
+                <div id="horo-sign" class="text-amber-400 text-[10px] font-black tracking-[0.4em] uppercase mb-4 opacity-70">Horoscope</div>
+                <div id="horo-text" class="text-slate-200 text-base leading-relaxed font-light tracking-wide text-justify line-clamp-4 italic transition-opacity duration-500">運勢更新中...</div>
+                <div id="aqi-status" class="mt-6 text-[9px] font-bold tracking-widest uppercase text-slate-500 border border-white/5 self-start px-3 py-1 rounded-full">AQI: --</div>
             </div>
         </div>
 
-        <div class="glass p-5 relative overflow-hidden">
-            <div class="camera-container h-full">
+        <div class="glass p-5">
+            <div class="camera-container">
                 <iframe id="cam-player" src=""></iframe>
-                <div class="absolute top-6 left-6 z-10 text-[10px] font-bold text-white bg-black/40 backdrop-blur-md px-3 py-1 rounded-full tracking-widest border border-white/10 uppercase">
+                <div class="absolute top-4 left-4 z-10 text-[9px] font-bold text-white bg-black/40 backdrop-blur-md px-3 py-1 rounded-full tracking-widest border border-white/10 uppercase">
                     Traffic Feed <span class="text-red-500 ml-1 animate-pulse">●</span>
                 </div>
             </div>
@@ -114,7 +132,6 @@
                 const data = await res.json();
                 const weather = data.records.location[0];
                 const elements = weather.weatherElement;
-
                 const wx = elements.find(e => e.elementName === 'Wx').time[0].parameter.parameterName;
                 const pop = elements.find(e => e.elementName === 'PoP').time[0].parameter.parameterName;
                 const maxT = elements.find(e => e.elementName === 'MaxT').time[0].parameter.parameterName;
@@ -133,10 +150,9 @@
                 wxTimes.forEach((t, i) => {
                     const label = i === 0 ? "今晚" : (i === 1 ? "明日" : "明晚");
                     const icon = Object.keys(weatherIcons).find(k => t.parameter.parameterName.includes(k)) || "☀️";
-                    html += `<div class="flex flex-col items-center"><p class="text-[11px] font-bold text-slate-500 uppercase tracking-widest">${label}</p><p class="text-3xl my-1">${weatherIcons[icon]}</p><p class="text-sm font-bold text-slate-200">${maxTimes[i].parameter.parameterName}°</p></div>`;
+                    html += `<div class="flex flex-col items-center"><p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">${label}</p><p class="text-3xl my-1">${weatherIcons[icon]}</p><p class="text-sm font-bold text-slate-200">${maxTimes[i].parameter.parameterName}°</p></div>`;
                 });
                 document.getElementById('forecast-row').innerHTML = html;
-                
                 fetchAQIAndHum();
             } catch (e) { console.error("Weather failed"); }
         }
@@ -177,10 +193,10 @@
         }
 
         async function toggleVacuum() {
-            const s = document.getElementById('vacuum-status').innerText;
-            const action = (s === 'Cleaning' || s === '清掃中') ? 'stop' : 'start';
             document.getElementById('vacuum-status').innerText = "Sending...";
             try {
+                const s = document.getElementById('vacuum-status').innerText;
+                const action = (s === 'Cleaning' || s === '清掃中') ? 'stop' : 'start';
                 await fetch(`${BRIDGE_URL}/api/vacuum/${action}`);
                 setTimeout(fetchBridge, 2000);
             } catch (e) {}
