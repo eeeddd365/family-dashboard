@@ -3,108 +3,88 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Surface Home Dashboard - Fixed</title>
+    <title>Surface Home Dashboard - Multi-News</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@100;300;400;700&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body, html { 
-            width: 100%; height: 100%; overflow: hidden; 
-            background: #020617; color: #f1f5f9; 
-            font-family: 'Noto Sans TC', sans-serif; 
-        }
+        body, html { width: 100%; height: 100%; overflow: hidden; background: #020617; color: #f1f5f9; font-family: 'Noto Sans TC', sans-serif; }
         .dashboard-grid { 
-            display: grid; 
-            grid-template-columns: 1fr 1.1fr; 
-            grid-template-rows: 1.6fr 1fr; 
-            gap: 1.5rem; 
-            height: 100vh; 
-            padding: 1.5rem;
-            max-height: 100vh;
+            display: grid; grid-template-columns: 1fr 1.15fr; grid-template-rows: 1.6fr 1fr; gap: 1.5rem; 
+            height: 100vh; padding: 1.5rem; max-height: 100vh;
         }
         .glass { 
-            background: rgba(255, 255, 255, 0.03); 
-            backdrop-filter: blur(25px); 
-            border: 1px solid rgba(255, 255, 255, 0.1); 
-            border-radius: 2.5rem; 
-            display: flex; 
-            flex-direction: column;
-            overflow: hidden;
+            background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(30px); 
+            border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 2.5rem; 
+            display: flex; flex-direction: column; overflow: hidden;
         }
         .text-neon { text-shadow: 0 0 25px rgba(56, 189, 248, 0.6); }
-        .camera-container { width: 100%; height: 100%; background: #000; border-radius: 1.5rem; overflow: hidden; position: relative; }
-        iframe { width: 100%; height: 100%; border: none; transition: opacity 0.8s ease; }
+        iframe { width: 100%; height: 100%; border: none; transition: opacity 0.8s ease; border-radius: 1.5rem; }
     </style>
 </head>
 <body>
 
     <div class="dashboard-grid">
-        <div class="glass items-center justify-center text-center p-6">
-            <div id="clock" class="text-[9rem] font-thin leading-none text-neon tracking-tighter">00:00</div>
+        <div class="glass items-center justify-center text-center">
+            <div id="clock" class="text-[9.5rem] font-thin leading-none text-neon tracking-tighter">00:00</div>
             <div class="mt-2 text-2xl text-slate-300 font-light tracking-[0.3em]" id="date">載入中...</div>
-            <div class="flex gap-12 mt-10 justify-center border-t border-white/5 pt-10 w-full">
+            <div class="flex gap-12 mt-10 justify-center border-t border-white/5 pt-10 w-4/5">
                 <div class="flex flex-col items-center gap-1">
                     <span class="text-sky-400 font-bold tracking-[0.2em] uppercase text-[10px]">Indoor Env</span>
-                    <span class="text-3xl font-light"><span id="indoor-temp">--</span>° <span class="text-white/10">/</span> <span id="indoor-hum">--</span>%</span>
+                    <span class="text-3xl font-light"><span id="indoor-temp">--</span>° / <span id="indoor-hum">--</span>%</span>
                 </div>
                 <div class="w-[1px] h-12 bg-white/10"></div>
                 <div class="flex flex-col items-center gap-1 cursor-pointer active:scale-95 transition" onclick="toggleVacuum()">
                     <span class="text-amber-400 font-bold tracking-[0.2em] uppercase text-[10px]">Vacuum Bot 🧹</span>
-                    <span id="vacuum-status" class="text-2xl font-light italic text-slate-200">Connecting...</span>
+                    <span id="vacuum-status" class="text-2xl font-light italic">Connecting...</span>
                 </div>
             </div>
         </div>
 
-        <div class="glass p-10 justify-start">
-            <h2 class="text-[11px] font-bold text-slate-500 mb-6 tracking-[0.5em] uppercase border-b border-white/5 pb-2">Latest Flash News</h2>
+        <div class="glass p-10">
+            <div class="flex justify-between items-end mb-6 border-b border-white/5 pb-2">
+                <h2 class="text-[11px] font-bold text-slate-500 tracking-[0.5em] uppercase">Global News Feed</h2>
+                <span id="news-source" class="text-[9px] text-sky-400/50 font-bold tracking-widest uppercase">Syncing...</span>
+            </div>
             <div id="news-list" class="space-y-6 flex-1 overflow-hidden"></div>
             <div class="mt-6 pt-6 flex justify-between items-center text-slate-400 border-t border-white/5">
                 <p id="lunar" class="text-sm italic font-light tracking-widest">農曆載入中...</p>
-                <span class="text-[9px] bg-sky-500/10 text-sky-400 px-3 py-1 rounded-full uppercase font-bold tracking-widest">Live Feed</span>
+                <div class="flex gap-2">
+                    <span class="text-[9px] bg-white/5 px-3 py-1 rounded-full uppercase font-bold tracking-widest">Live</span>
+                    <span class="text-[9px] bg-sky-500/10 text-sky-400 px-3 py-1 rounded-full uppercase font-bold tracking-widest animate-pulse">Update</span>
+                </div>
             </div>
         </div>
 
         <div class="glass flex-row items-center px-10">
-            <div class="w-[65%] h-[85%] border-r border-white/10 pr-10 flex flex-col justify-between">
-                <div class="flex items-center gap-8">
-                    <div id="weather-icon" class="text-[6.5rem] shrink-0 leading-none">☀️</div>
-                    <div class="min-w-0 flex-1">
+            <div class="w-[65%] h-[80%] border-r border-white/5 pr-10 flex flex-col justify-between">
+                <div class="flex items-center gap-10">
+                    <div id="weather-icon" class="text-[6.5rem] leading-none">☀️</div>
+                    <div class="flex-1 min-w-0">
                         <div class="flex items-baseline gap-4">
                             <span id="temp" class="text-7xl font-bold tracking-tighter">--°C</span>
                             <span id="weather-desc" class="text-sky-400 text-lg font-bold uppercase tracking-widest truncate">載入中</span>
                         </div>
-                        <div class="flex justify-between mt-5 pr-2">
-                            <div class="flex flex-col">
-                                <span class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Precip</span>
-                                <span id="rain-pop" class="text-lg font-light">🌧 --%</span>
-                            </div>
-                            <div class="flex flex-col">
-                                <span class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Feels</span>
-                                <span class="text-lg font-light text-amber-400"><span id="feels-like">--</span>°</span>
-                            </div>
-                            <div class="flex flex-col">
-                                <span class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Humidity</span>
-                                <span class="text-lg font-light text-sky-300"><span id="humidity">--</span>%</span>
-                            </div>
+                        <div class="flex justify-between mt-6 pr-4">
+                            <div class="flex flex-col"><span class="text-[9px] font-bold text-slate-500 uppercase mb-1">Precip</span><span id="rain-pop" class="text-lg font-light">🌧 --%</span></div>
+                            <div class="flex flex-col"><span class="text-[9px] font-bold text-slate-500 uppercase mb-1">Feels</span><span class="text-lg font-light text-amber-400"><span id="feels-like">--</span>°</span></div>
+                            <div class="flex flex-col"><span class="text-[9px] font-bold text-slate-500 uppercase mb-1">Humid</span><span class="text-lg font-light text-sky-300"><span id="humidity">--</span>%</span></div>
                         </div>
                     </div>
                 </div>
-                <div id="forecast-row" class="grid grid-cols-3 gap-4 border-t border-white/5 pt-5 text-center"></div>
+                <div id="forecast-row" class="grid grid-cols-3 gap-4 border-t border-white/5 pt-6 text-center"></div>
             </div>
-
-            <div class="w-[35%] pl-10 h-[85%] flex flex-col justify-center">
-                <div id="horo-sign" class="text-amber-400 text-[10px] font-black tracking-[0.4em] uppercase mb-4 opacity-70">Horoscope</div>
-                <div id="horo-text" class="text-slate-200 text-base leading-relaxed font-light tracking-wide text-justify line-clamp-4 italic transition-opacity duration-500">運勢更新中...</div>
-                <div id="aqi-status" class="mt-6 text-[9px] font-bold tracking-widest uppercase text-slate-500 border border-white/5 self-start px-3 py-1 rounded-full">AQI: --</div>
+            <div class="w-[35%] pl-10 h-[80%] flex flex-col justify-center">
+                <div id="horo-sign" class="text-amber-400 text-[10px] font-black tracking-[0.5em] uppercase mb-4 opacity-70">Horoscope</div>
+                <div id="horo-text" class="text-slate-200 text-[17px] leading-relaxed font-light tracking-wide italic line-clamp-4 transition-opacity duration-500">運勢更新中...</div>
+                <div id="aqi-status" class="mt-6 text-[9px] font-bold tracking-widest text-slate-500 uppercase border border-white/5 px-3 py-1 rounded-full self-start">AQI: --</div>
             </div>
         </div>
 
-        <div class="glass p-5">
-            <div class="camera-container">
-                <iframe id="cam-player" src=""></iframe>
-                <div class="absolute top-4 left-4 z-10 text-[9px] font-bold text-white bg-black/40 backdrop-blur-md px-3 py-1 rounded-full tracking-widest border border-white/10 uppercase">
-                    Traffic Feed <span class="text-red-500 ml-1 animate-pulse">●</span>
-                </div>
+        <div class="glass p-5 relative">
+            <iframe id="cam-player" src=""></iframe>
+            <div class="absolute top-8 left-8 z-10 text-[9px] font-bold text-white bg-black/40 backdrop-blur-md px-3 py-1 rounded-full tracking-widest border border-white/10 uppercase">
+                Traffic Feed <span class="text-red-500 ml-1 animate-pulse">●</span>
             </div>
         </div>
     </div>
@@ -113,9 +93,16 @@
         const CWA_KEY = 'CWB-211FFE24-164E-4464-A517-EEC3D50F45A6';
         const BRIDGE_URL = 'http://127.0.0.1:5000';
         const CAM_URLS = ["https://tcnvr6.taichung.gov.tw/9db0d761", "https://tcnvr5.taichung.gov.tw/ff2db7f1", "https://tcnvr5.taichung.gov.tw/c9ec3cca"];
+        // 新聞來源列表
+        const NEWS_FEEDS = [
+            { name: "公視新聞", url: "https://news.pts.org.tw/xml/newsfeed.xml" },
+            { name: "關鍵評論", url: "https://feeds.feedburner.com/TheNewsLens" },
+            { name: "自由時報", url: "https://news.ltn.com.tw/rss/all.xml" },
+            { name: "科技新報", url: "https://technews.tw/feed/" }
+        ];
         const weatherIcons = { "晴": "☀️", "多雲": "☁️", "陰": "🌥️", "雨": "🌧️", "雷": "⛈️" };
         
-        let horoIdx = 0, allNews = [], camIdx = 0, newsIdx = 0;
+        let horoIdx = 0, allNews = [], camIdx = 0, newsIdx = 0, currentFeedIdx = 0;
 
         function updateClock() {
             const n = new Date();
@@ -133,24 +120,17 @@
                 const weather = data.records.location[0];
                 const elements = weather.weatherElement;
                 const wx = elements.find(e => e.elementName === 'Wx').time[0].parameter.parameterName;
-                const pop = elements.find(e => e.elementName === 'PoP').time[0].parameter.parameterName;
-                const maxT = elements.find(e => e.elementName === 'MaxT').time[0].parameter.parameterName;
-                
-                document.getElementById('temp').innerText = `${maxT}°C`;
+                document.getElementById('temp').innerText = `${elements.find(e => e.elementName === 'MaxT').time[0].parameter.parameterName}°C`;
                 document.getElementById('weather-desc').innerText = wx;
-                document.getElementById('rain-pop').innerText = `🌧 ${pop}%`;
-                document.getElementById('feels-like').innerText = parseInt(maxT) - 1; 
-                
-                const iconKey = Object.keys(weatherIcons).find(k => wx.includes(k)) || "☀️";
-                document.getElementById('weather-icon').innerText = weatherIcons[iconKey];
+                document.getElementById('rain-pop').innerText = `🌧 ${elements.find(e => e.elementName === 'PoP').time[0].parameter.parameterName}%`;
+                document.getElementById('feels-like').innerText = parseInt(elements.find(e => e.elementName === 'MaxT').time[0].parameter.parameterName) - 1; 
+                document.getElementById('weather-icon').innerText = weatherIcons[Object.keys(weatherIcons).find(k => wx.includes(k))] || "☀️";
 
                 let html = '';
-                const wxTimes = elements.find(e => e.elementName === 'Wx').time;
-                const maxTimes = elements.find(e => e.elementName === 'MaxT').time;
-                wxTimes.forEach((t, i) => {
+                elements.find(e => e.elementName === 'Wx').time.forEach((t, i) => {
                     const label = i === 0 ? "今晚" : (i === 1 ? "明日" : "明晚");
-                    const icon = Object.keys(weatherIcons).find(k => t.parameter.parameterName.includes(k)) || "☀️";
-                    html += `<div class="flex flex-col items-center"><p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">${label}</p><p class="text-3xl my-1">${weatherIcons[icon]}</p><p class="text-sm font-bold text-slate-200">${maxTimes[i].parameter.parameterName}°</p></div>`;
+                    const icon = weatherIcons[Object.keys(weatherIcons).find(k => t.parameter.parameterName.includes(k))] || "☀️";
+                    html += `<div class="flex flex-col items-center"><p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">${label}</p><p class="text-3xl my-1">${icon}</p><p class="text-sm font-bold text-slate-200">${elements.find(e => e.elementName === 'MaxT').time[i].parameter.parameterName}°</p></div>`;
                 });
                 document.getElementById('forecast-row').innerHTML = html;
                 fetchAQIAndHum();
@@ -164,22 +144,25 @@
                 const situn = d.records.find(r => r.sitename === '西屯') || d.records[0];
                 document.getElementById('aqi-status').innerText = `AQI: ${situn.aqi} (${situn.status})`;
                 document.getElementById('humidity').innerText = "65";
-            } catch (e) { document.getElementById('aqi-status').innerText = "AQI: --"; }
+            } catch (e) {}
         }
 
         async function fetchNews() { 
             try { 
-                const r = await fetch('https://api.rss2json.com/v1/api.json?rss_url=https://news.pts.org.tw/xml/newsfeed.xml'); 
+                const feed = NEWS_FEEDS[currentFeedIdx];
+                document.getElementById('news-source').innerText = `Source: ${feed.name}`;
+                const r = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feed.url)}`); 
                 const d = await r.json(); 
                 if(d.items) { allNews = d.items; rotateNews(); }
+                currentFeedIdx = (currentFeedIdx + 1) % NEWS_FEEDS.length;
             } catch(e){} 
         }
 
         function rotateNews() { 
             if(!allNews.length) return; 
-            const list = allNews.slice(newsIdx, newsIdx+3); 
+            const list = allNews.slice(newsIdx, newsIdx + 3); 
             document.getElementById('news-list').innerHTML = list.map(i => `<div class="border-b border-white/5 pb-3"><p class="text-xl text-slate-100 font-light line-clamp-1 tracking-wide">${i.title}</p></div>`).join(''); 
-            newsIdx = (newsIdx+3) >= allNews.length ? 0 : newsIdx + 3; 
+            newsIdx = (newsIdx + 3) >= allNews.length ? 0 : newsIdx + 3; 
         }
 
         async function fetchBridge() {
@@ -193,13 +176,10 @@
         }
 
         async function toggleVacuum() {
+            const s = document.getElementById('vacuum-status').innerText;
+            const action = (s === 'Cleaning' || s === '清掃中') ? 'stop' : 'start';
             document.getElementById('vacuum-status').innerText = "Sending...";
-            try {
-                const s = document.getElementById('vacuum-status').innerText;
-                const action = (s === 'Cleaning' || s === '清掃中') ? 'stop' : 'start';
-                await fetch(`${BRIDGE_URL}/api/vacuum/${action}`);
-                setTimeout(fetchBridge, 2000);
-            } catch (e) {}
+            try { await fetch(`${BRIDGE_URL}/api/vacuum/${action}`); setTimeout(fetchBridge, 2000); } catch (e) {}
         }
 
         function updateHoroscope() {
@@ -207,9 +187,8 @@
                 'sagittarius': "今天適合沈澱思緒，處理居家事務能帶來穩定感。環境佈置的小改變會帶來驚喜的好運。",
                 'capricorn': "工作運勢穩定，努力開始見效。保持專注並避免過度焦慮，穩健的步伐正引領你走向成果。"
             };
-            const signs = ['sagittarius', 'capricorn'];
+            const sign = ['sagittarius', 'capricorn'][horoIdx];
             const names = { 'sagittarius': '射手座 ♐', 'capricorn': '摩羯座 ♑' };
-            const sign = signs[horoIdx];
             const hText = document.getElementById('horo-text');
             hText.style.opacity = 0;
             setTimeout(() => {
@@ -228,7 +207,8 @@
 
         updateClock(); setInterval(updateClock, 1000);
         fetchWeather(); setInterval(fetchWeather, 600000);
-        fetchNews(); setInterval(rotateNews, 8000);
+        fetchNews(); setInterval(fetchNews, 30000); // 每 30 秒更換新聞源
+        setInterval(rotateNews, 8000); // 每 8 秒切換一組標題
         updateHoroscope(); setInterval(updateHoroscope, 10000);
         rotateCam(); setInterval(rotateCam, 20000);
         fetchBridge(); setInterval(fetchBridge, 3000);
